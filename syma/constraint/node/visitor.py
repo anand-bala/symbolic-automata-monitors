@@ -1,81 +1,107 @@
-from abc import ABCMeta, abstractmethod
-from syma.constraint.node.node import *
+from abc import ABC, abstractmethod
+
+from syma.constraint.node.node import (EQ, GEQ, GT, LEQ, LT, NEQ, And,
+                                       BoolConst, BoolVar, IntConst, IntVar,
+                                       Node, Not, Or, RealConst, RealVar)
 
 NOT_IMPLEMENTED = "You should implement this."
 
-class NodeVisitor:
-    __metaclass__ = ABCMeta
+from typing import Generic, TypeVar
 
-    def visit(self, node, args):
-        out = None
+T = TypeVar("T")
 
-        if isinstance(node, ConstantNode):
-            out = self.visitConstant(node, args)
-        elif isinstance(node, VariableNode):
-            out = self.visitVariable(node, args)
-        elif isinstance(node, LEQNode):
-            out = self.visitLEQ(node, args)
-        elif isinstance(node, LessNode):
-            out = self.visitLess(node, args)
-        elif isinstance(node, GEQNode):
-            out = self.visitGEQ(node, args)
-        elif isinstance(node, GreaterNode):
-            out = self.visitGreater(node, args)
-        elif isinstance(node, EqualNode):
-            out = self.visitEqual(node, args)
-        elif isinstance(node, NEQNode):
-            out = self.visitNEQ(node, args)
-        elif isinstance(node, NotNode):
-            out = self.visitNot(node, args)
-        elif isinstance(node, AndNode):
-            out = self.visitAnd(node, args)
-        elif isinstance(node, OrNode):
-            out = self.visitOr(node, args)
+
+class NodeVisitor(Generic[T], ABC):
+    def visit(self, node: Node, *args) -> T:
+        if isinstance(node, BoolConst):
+            return self.visitBoolConst(node, *args)
+        if isinstance(node, IntConst):
+            return self.visitIntConst(node, *args)
+        if isinstance(node, RealConst):
+            return self.visitRealConst(node, *args)
+        if isinstance(node, BoolVar):
+            return self.visitBoolVar(node, *args)
+        if isinstance(node, IntVar):
+            return self.visitIntVar(node, *args)
+        if isinstance(node, RealVar):
+            return self.visitRealVar(node, *args)
+        if isinstance(node, EQ):
+            return self.visitEQ(node, *args)
+        if isinstance(node, GEQ):
+            return self.visitGEQ(node, *args)
+        if isinstance(node, GT):
+            return self.visitGT(node, *args)
+        if isinstance(node, LEQ):
+            return self.visitLEQ(node, *args)
+        if isinstance(node, LT):
+            return self.visitLT(node, *args)
+        if isinstance(node, NEQ):
+            return self.visitNEQ(node, *args)
+        if isinstance(node, Not):
+            return self.visitNot(node, *args)
+        if isinstance(node, And):
+            return self.visitAnd(node, *args)
+        if isinstance(node, Or):
+            return self.visitOr(node, *args)
         else:
-            raise Exception('Node Visitor: unexpected method called.')
-        return out
-
+            raise Exception("Node Visitor: unexpected method called.")
 
     @abstractmethod
-    def visitConstant(self, node, args):
+    def visitBoolConst(self, node: BoolConst, *args) -> T:
         raise NotImplementedError(NOT_IMPLEMENTED)
 
     @abstractmethod
-    def visitVariable(self, node, args):
+    def visitIntConst(self, node: IntConst, *args) -> T:
         raise NotImplementedError(NOT_IMPLEMENTED)
 
     @abstractmethod
-    def visitGEQ(self, node, args):
+    def visitRealConst(self, node: RealConst, *args) -> T:
         raise NotImplementedError(NOT_IMPLEMENTED)
 
     @abstractmethod
-    def visitGreater(self, node, args):
+    def visitBoolVar(self, node: BoolVar, *args) -> T:
         raise NotImplementedError(NOT_IMPLEMENTED)
 
     @abstractmethod
-    def visitLEQ(self, node, args):
+    def visitIntVar(self, node: IntVar, *args) -> T:
         raise NotImplementedError(NOT_IMPLEMENTED)
 
     @abstractmethod
-    def visitLess(self, node, args):
+    def visitRealVar(self, node: RealVar, *args) -> T:
         raise NotImplementedError(NOT_IMPLEMENTED)
 
     @abstractmethod
-    def visitEqual(self, node, args):
+    def visitGEQ(self, node: GEQ, *args) -> T:
         raise NotImplementedError(NOT_IMPLEMENTED)
 
     @abstractmethod
-    def visitNEQ(self, node, args):
+    def visitGT(self, node: GT, *args) -> T:
         raise NotImplementedError(NOT_IMPLEMENTED)
 
     @abstractmethod
-    def visitNot(self, node, args):
+    def visitLEQ(self, node: LEQ, *args) -> T:
         raise NotImplementedError(NOT_IMPLEMENTED)
 
     @abstractmethod
-    def visitAnd(self, node, args):
+    def visitLT(self, node: LT, *args) -> T:
         raise NotImplementedError(NOT_IMPLEMENTED)
 
     @abstractmethod
-    def visitOr(self, node, args):
+    def visitEQ(self, node: EQ, *args) -> T:
+        raise NotImplementedError(NOT_IMPLEMENTED)
+
+    @abstractmethod
+    def visitNEQ(self, node: NEQ, *args) -> T:
+        raise NotImplementedError(NOT_IMPLEMENTED)
+
+    @abstractmethod
+    def visitNot(self, node: Not, *args) -> T:
+        raise NotImplementedError(NOT_IMPLEMENTED)
+
+    @abstractmethod
+    def visitAnd(self, node: And, *args) -> T:
+        raise NotImplementedError(NOT_IMPLEMENTED)
+
+    @abstractmethod
+    def visitOr(self, node: Or, *args) -> T:
         raise NotImplementedError(NOT_IMPLEMENTED)
