@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
 
-from syma.constraint.node.node import (EQ, GEQ, GT, LEQ, LT, NEQ, And,
-                                       BoolConst, BoolVar, IntConst, IntVar,
-                                       Node, Not, Or, RealConst, RealVar)
+from .node import (EQ, GEQ, GT, LEQ, LT, NEQ, And, BoolConst, BoolVar,
+                   IntConst, IntVar, Node, Not, Or, RealConst, RealVar)
 
 NOT_IMPLEMENTED = "You should implement this."
 
@@ -44,7 +43,7 @@ class NodeVisitor(Generic[T], ABC):
         if isinstance(node, Or):
             return self.visitOr(node, *args)
         else:
-            raise Exception("Node Visitor: unexpected method called.")
+            raise Exception(f"Unknown type for NodeVisitor: {type(node)}")
 
     @abstractmethod
     def visitBoolConst(self, node: BoolConst, *args) -> T:

@@ -1,12 +1,13 @@
-from typing import Mapping, Tuple, Union
+from typing import TYPE_CHECKING, Mapping, Tuple, Union
 
-import numpy as np
 import z3
-from z3 import ExprRef, Solver
 
-from syma.alphabet import Alphabet
 from syma.constraint.node import BoolVar, IntVar, Node, RealVar
 from syma.constraint.smt_translator import Formula2SMT
+
+if TYPE_CHECKING:
+    from syma.alphabet import Alphabet
+
 
 Value = Union[bool, int, float]
 VarNode = Union[BoolVar, IntVar, RealVar]
@@ -17,10 +18,10 @@ def formula_to_smt(formula: Node) -> z3.ExprRef:
 
 
 class Constraint(object):
-    def __init__(self, alphabet: Alphabet, formula: Node):
+    def __init__(self, alphabet: "Alphabet", formula: Node):
         self._alphabet = alphabet
         self._formula = formula
-        self._smt_formula: ExprRef = formula_to_smt(self._formula)
+        self._smt_formula: z3.ExprRef = formula_to_smt(self._formula)
 
     @property
     def formula(self) -> Node:
@@ -31,7 +32,7 @@ class Constraint(object):
         return self._alphabet
 
     @property
-    def expr(self) -> ExprRef:
+    def expr(self) -> z3.ExprRef:
         return self._smt_formula
 
     def check_sat(self, values: Mapping[str, Value]) -> bool:
@@ -56,3 +57,9 @@ class Constraint(object):
         solver = z3.Solver()
         solver.add(new_expr)
         return solver.check() == z3.sat
+
+    def __repr__(self):
+        return repr(self._formula)
+
+    def __str__(self):
+        return str(self._formula)

@@ -10,16 +10,40 @@ class Node(object):
     def add_child(self, child: "Node"):
         self.children.append(child)
 
-    def __lt__(self, other: "Node") -> "LT":
+    def __lt__(self, other: Union["Node", bool, int, float]) -> "LT":
+        if isinstance(other, bool):
+            other = BoolConst(other)
+        elif isinstance(other, int):
+            other = IntConst(other)
+        elif isinstance(other, float):
+            other = RealConst(other)
         return LT(self, other)
 
-    def __le__(self, other: "Node") -> "LEQ":
+    def __le__(self, other: Union["Node", bool, int, float]) -> "LEQ":
+        if isinstance(other, bool):
+            other = BoolConst(other)
+        elif isinstance(other, int):
+            other = IntConst(other)
+        elif isinstance(other, float):
+            other = RealConst(other)
         return LEQ(self, other)
 
-    def __gt__(self, other: "Node") -> "GT":
+    def __gt__(self, other: Union["Node", bool, int, float]) -> "GT":
+        if isinstance(other, bool):
+            other = BoolConst(other)
+        elif isinstance(other, int):
+            other = IntConst(other)
+        elif isinstance(other, float):
+            other = RealConst(other)
         return GT(self, other)
 
-    def __ge__(self, other: "Node") -> "GEQ":
+    def __ge__(self, other: Union["Node", bool, int, float]) -> "GEQ":
+        if isinstance(other, bool):
+            other = BoolConst(other)
+        elif isinstance(other, int):
+            other = IntConst(other)
+        elif isinstance(other, float):
+            other = RealConst(other)
         return GEQ(self, other)
 
     def __invert__(self) -> "Not":
@@ -145,10 +169,10 @@ class LEQ(Node):
         self.children.append(op2)
 
     def __str__(self):
-        return f"({str(self.children[0])}) <= ({str(self.children[1])})"
+        return f"{str(self.children[0])} <= {str(self.children[1])}"
 
     def __repr__(self):
-        return f"LEQ(\n\t{str(self.children[0])}, \n\t{str(self.children[1])})"
+        return f"LEQ({str(self.children[0])}, {str(self.children[1])})"
 
 
 class LT(Node):
@@ -158,10 +182,10 @@ class LT(Node):
         self.children.append(op2)
 
     def __str__(self):
-        return f"({str(self.children[0])}) < ({str(self.children[1])})"
+        return f"{str(self.children[0])} < {str(self.children[1])}"
 
     def __repr__(self):
-        return f"LT(\n\t{str(self.children[0])}, \n\t{str(self.children[1])})"
+        return f"LT({str(self.children[0])}, {str(self.children[1])})"
 
 
 class GEQ(Node):
@@ -171,10 +195,10 @@ class GEQ(Node):
         self.children.append(op2)
 
     def __str__(self):
-        return f"({str(self.children[0])}) >= ({str(self.children[1])})"
+        return f"{str(self.children[0])} >= {str(self.children[1])}"
 
     def __repr__(self):
-        return f"GEQ(\n\t{str(self.children[0])}, \n\t{str(self.children[1])})"
+        return f"GEQ({str(self.children[0])}, {str(self.children[1])})"
 
 
 class GT(Node):
@@ -184,10 +208,10 @@ class GT(Node):
         self.children.append(op2)
 
     def __str__(self):
-        return f"({str(self.children[0])}) > ({str(self.children[1])})"
+        return f"{str(self.children[0])} > {str(self.children[1])}"
 
     def __repr__(self):
-        return f"GT(\n\t{str(self.children[0])}, \n\t{str(self.children[1])})"
+        return f"GT({str(self.children[0])}, {str(self.children[1])})"
 
 
 class EQ(Node):
@@ -197,10 +221,10 @@ class EQ(Node):
         self.children.append(op2)
 
     def __str__(self):
-        return f"({str(self.children[0])}) == ({str(self.children[1])})"
+        return f"{str(self.children[0])} == {str(self.children[1])}"
 
     def __repr__(self):
-        return f"EQ(\n\t{str(self.children[0])}, \n\t{str(self.children[1])})"
+        return f"EQ({str(self.children[0])}, {str(self.children[1])})"
 
 
 class NEQ(Node):
@@ -210,10 +234,10 @@ class NEQ(Node):
         self.children.append(op2)
 
     def __str__(self):
-        return f"({str(self.children[0])}) != ({str(self.children[1])})"
+        return f"{str(self.children[0])}) != ({str(self.children[1])}"
 
     def __repr__(self):
-        return f"NEQ(\n\t{str(self.children[0])}, \n\t{str(self.children[1])})"
+        return f"NEQ({str(self.children[0])}, {str(self.children[1])})"
 
 
 class Not(Node):

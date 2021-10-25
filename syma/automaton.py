@@ -1,11 +1,15 @@
 from dataclasses import dataclass
-from typing import Iterable, List, Tuple, Union
+from typing import Iterable, Optional, Tuple, Union
 
 import networkx as nx
 import z3
 
 from syma.alphabet import Alphabet
 from syma.constraint.constraint import Constraint
+from syma.constraint.node import BoolVar, IntVar, RealVar
+from syma.constraint.node.node import BoolConst, Node
+
+VarNode = Union[BoolVar, IntVar, RealVar]
 
 
 @dataclass
@@ -41,6 +45,21 @@ class SymbolicAutomaton(object):
     def add_var(self, name, domain):
         self._alphabet.add_var(name, domain)
 
+    def declare_bool(self, name: str, domain: Optional[Tuple] = None) -> BoolVar:
+        var = BoolVar(name)
+        self.add_var(var, domain)
+        return var
+
+    def declare_int(self, name: str, domain: Optional[Tuple] = None) -> IntVar:
+        var = IntVar(name)
+        self.add_var(var, domain)
+        return var
+
+    def declare_real(self, name: str, domain: Optional[Tuple] = None) -> RealVar:
+        var = RealVar(name)
+        self.add_var(var, domain)
+        return var
+
     def add_location(self, location: int, initial=False, accepting=False):
         if location in self._graph.nodes:
             raise ValueError(f"Location {location} already exists in automaton")
@@ -50,11 +69,15 @@ class SymbolicAutomaton(object):
             )
         self._graph.add_node(location, initial=initial, accepting=accepting)
 
-    def add_transition(self, src: int, dst: int, guard: Constraint):
+    def add_transition(self, src: int, dst: int, guard: Union[Constraint, Node, bool]):
         if (src, dst) in self._graph.edges:
             raise ValueError(
                 f"Transition from {src} to {dst} already exists. Did you want to update the guard?"
             )
+        if isinstance(guard, Node):
+            guard = Constraint(self._alphabet, guard)
+        elif isinstance(guard, bool):
+            guard = Constraint(self._alphabet, BoolConst(guard))
         self._graph.add_edge(src, dst, guard=guard)
 
     def location(self, node: int) -> Location:
@@ -114,8 +137,11 @@ class SymbolicAutomaton(object):
             out_guards = [
                 self.get_guard(q, q_).expr for q_ in self._graph.successors(q)
             ]
-            disjunction = z3.simplify(z3.Or(*out_guards))
-            if not z3.is_true(disjunction):
+            disjunction = z3.Or(*out_guards)
+            solver = z3.Solver()
+            solver.add(z3.ForAll(list(self._alphabet.get_z3_vars()), disjunction))
+            if solver.check() != z3.sat:
+                print(f"Automaton is incomplete at location: {self.location(q)}")
                 return False
 
         return True

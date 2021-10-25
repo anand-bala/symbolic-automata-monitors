@@ -1,4 +1,7 @@
-from typing import Generic, NamedTuple, Optional, Tuple, TypeVar, Union
+from typing import (Generic, Iterable, NamedTuple, Optional, Tuple, TypeVar,
+                    Union)
+
+import z3
 
 from syma.constraint.node import BoolVar, IntVar, Node, RealVar
 
@@ -23,19 +26,19 @@ class Alphabet(object):
         self.vars: dict[str, VarNode] = dict()  # Map of variable names to variable node
         self.domains: dict[str, Optional[Tuple]] = dict()  # Domain Map
 
-    def declare_bool(self, name: str) -> BoolVar:
+    def declare_bool(self, name: str, domain: Optional[Tuple] = None) -> BoolVar:
         var = BoolVar(name)
-        self.add_var(var, None)
+        self.add_var(var, domain)
         return var
 
-    def declare_int(self, name: str) -> IntVar:
+    def declare_int(self, name: str, domain: Optional[Tuple] = None) -> IntVar:
         var = IntVar(name)
-        self.add_var(var, None)
+        self.add_var(var, domain)
         return var
 
-    def declare_real(self, name: str) -> RealVar:
+    def declare_real(self, name: str, domain: Optional[Tuple] = None) -> RealVar:
         var = RealVar(name)
-        self.add_var(var, None)
+        self.add_var(var, domain)
         return var
 
     def add_var(self, var: VarNode, domain: Optional[Tuple]):
@@ -50,3 +53,12 @@ class Alphabet(object):
 
     def get_domain(self, var_name: str) -> Optional[Tuple]:
         return self.domains[var_name]
+
+    def get_z3_vars(self) -> Iterable[z3.ExprRef]:
+        for var in self.vars.values():
+            if isinstance(var, BoolVar):
+                yield z3.Bool(var.name)
+            if isinstance(var, IntVar):
+                yield z3.Int(var.name)
+            if isinstance(var, RealVar):
+                yield z3.Real(var.name)
