@@ -67,6 +67,9 @@ class Node(ABC):
     def doVisit(self, visitor: "NodeVisitor", *args):
         ...
 
+    def is_nnf(self) -> bool:
+        return False
+
 
 class BoolConst(Node):
     def __init__(self, value: bool):
@@ -79,6 +82,9 @@ class BoolConst(Node):
 
     def doVisit(self, visitor: "NodeVisitor", *args):
         return visitor.visitBoolConst(self, *args)
+
+    def is_nnf(self) -> bool:
+        return True
 
     def __str__(self) -> str:
         return str(self.value)
@@ -144,6 +150,9 @@ class BoolVar(Node):
     def name(self) -> str:
         return self._name
 
+    def is_nnf(self) -> bool:
+        return True
+
     def __str__(self) -> str:
         return str(self.name)
 
@@ -207,6 +216,9 @@ class LEQ(Node):
     def doVisit(self, visitor: "NodeVisitor", *args):
         return visitor.visitLEQ(self, *args)
 
+    def is_nnf(self) -> bool:
+        return True
+
 
 class LT(Node):
     def __init__(self, op1: Node, op2: Node):
@@ -222,6 +234,9 @@ class LT(Node):
 
     def doVisit(self, visitor: "NodeVisitor", *args):
         return visitor.visitLT(self, *args)
+
+    def is_nnf(self) -> bool:
+        return True
 
 
 class GEQ(Node):
@@ -239,6 +254,9 @@ class GEQ(Node):
     def doVisit(self, visitor: "NodeVisitor", *args):
         return visitor.visitGEQ(self, *args)
 
+    def is_nnf(self) -> bool:
+        return True
+
 
 class GT(Node):
     def __init__(self, op1: Node, op2: Node):
@@ -254,6 +272,9 @@ class GT(Node):
 
     def doVisit(self, visitor: "NodeVisitor", *args):
         return visitor.visitGT(self, *args)
+
+    def is_nnf(self) -> bool:
+        return True
 
 
 class EQ(Node):
@@ -271,6 +292,9 @@ class EQ(Node):
     def doVisit(self, visitor: "NodeVisitor", *args):
         return visitor.visitEQ(self, *args)
 
+    def is_nnf(self) -> bool:
+        return True
+
 
 class NEQ(Node):
     def __init__(self, op1: Node, op2: Node):
@@ -287,6 +311,9 @@ class NEQ(Node):
     def doVisit(self, visitor: "NodeVisitor", *args):
         return visitor.visitNEQ(self, *args)
 
+    def is_nnf(self) -> bool:
+        return True
+
 
 class Not(Node):
     def __init__(self, op: Node):
@@ -302,34 +329,65 @@ class Not(Node):
     def doVisit(self, visitor: "NodeVisitor", *args):
         return visitor.visitNot(self, *args)
 
+    def is_nnf(self) -> bool:
+        return False
+
 
 class And(Node):
-    def __init__(self, op1: Node, op2: Node):
+    def __init__(self, *ops: Node):
         Node.__init__(self)
-        self.children.append(op1)
-        self.children.append(op2)
+        if len(ops) < 2:
+            raise ValueError("At least 2 operands required by AND")
+        self.children = []
+        for op in ops:
+            assert isinstance(op, Node)
+            if isinstance(op, And):
+                self.children.extend(op.children)
+            else:
+                self.children.append(op)
 
     def __str__(self):
-        return f"({str(self.children[0])}) and ({str(self.children[1])})"
+        return " and ".join([f"({str(child)})" for child in self.children])
 
     def __repr__(self):
-        return f"And({str(self.children[0])}, {str(self.children[1])})"
+        children = ", ".join([f"{repr(child)}" for child in self.children])
+        return f"And({children})"
 
     def doVisit(self, visitor: "NodeVisitor", *args):
         return visitor.visitAnd(self, *args)
 
+    def is_nnf(self) -> bool:
+        for child in self.children:
+            if not child.is_nnf():
+                return False
+        return True
+
 
 class Or(Node):
-    def __init__(self, op1: Node, op2: Node):
+    def __init__(self, *ops: Node):
         Node.__init__(self)
-        self.children.append(op1)
-        self.children.append(op2)
+        if len(ops) < 2:
+            raise ValueError("At least 2 operands required by OR")
+        self.children = []
+        for op in ops:
+            assert isinstance(op, Node)
+            if isinstance(op, Or):
+                self.children.extend(op.children)
+            else:
+                self.children.append(op)
 
     def __str__(self):
-        return f"({str(self.children[0])}) or ({str(self.children[1])})"
+        return " or ".join([f"({str(child)})" for child in self.children])
 
     def __repr__(self):
-        return f"Or({str(self.children[0])}, {str(self.children[1])})"
+        children = ", ".join([f"{repr(child)}" for child in self.children])
+        return f"Or({children})"
 
     def doVisit(self, visitor: "NodeVisitor", *args):
         return visitor.visitOr(self, *args)
+
+    def is_nnf(self) -> bool:
+        for child in self.children:
+            if not child.is_nnf():
+                return False
+        return True

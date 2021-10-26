@@ -65,11 +65,9 @@ class Formula2SMT(NodeVisitor[z3.ExprRef]):
         return z3.Not(op)  # type: ignore
 
     def visitAnd(self, node: And) -> z3.ExprRef:
-        op1 = self.visit(node.children[0])
-        op2 = self.visit(node.children[1])
-        return z3.And(op1, op2)  # type: ignore
+        ops = [self.visit(child) for child in node.children]
+        return z3.And(*ops)  # type: ignore
 
     def visitOr(self, node: Or) -> z3.ExprRef:
-        op1 = self.visit(node.children[0])
-        op2 = self.visit(node.children[1])
-        return z3.Or(op1, op2)  # type: ignore
+        ops = [self.visit(child) for child in node.children]
+        return z3.Or(*ops)  # type: ignore
