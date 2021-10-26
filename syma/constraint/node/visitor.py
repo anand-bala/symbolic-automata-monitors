@@ -12,38 +12,7 @@ T = TypeVar("T")
 
 class NodeVisitor(Generic[T], ABC):
     def visit(self, node: Node, *args) -> T:
-        if isinstance(node, BoolConst):
-            return self.visitBoolConst(node, *args)
-        if isinstance(node, IntConst):
-            return self.visitIntConst(node, *args)
-        if isinstance(node, RealConst):
-            return self.visitRealConst(node, *args)
-        if isinstance(node, BoolVar):
-            return self.visitBoolVar(node, *args)
-        if isinstance(node, IntVar):
-            return self.visitIntVar(node, *args)
-        if isinstance(node, RealVar):
-            return self.visitRealVar(node, *args)
-        if isinstance(node, EQ):
-            return self.visitEQ(node, *args)
-        if isinstance(node, GEQ):
-            return self.visitGEQ(node, *args)
-        if isinstance(node, GT):
-            return self.visitGT(node, *args)
-        if isinstance(node, LEQ):
-            return self.visitLEQ(node, *args)
-        if isinstance(node, LT):
-            return self.visitLT(node, *args)
-        if isinstance(node, NEQ):
-            return self.visitNEQ(node, *args)
-        if isinstance(node, Not):
-            return self.visitNot(node, *args)
-        if isinstance(node, And):
-            return self.visitAnd(node, *args)
-        if isinstance(node, Or):
-            return self.visitOr(node, *args)
-        else:
-            raise Exception(f"Unknown type for NodeVisitor: {type(node)}")
+        return node.doVisit(self, *args)
 
     @abstractmethod
     def visitBoolConst(self, node: BoolConst, *args) -> T:

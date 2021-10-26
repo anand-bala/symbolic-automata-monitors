@@ -22,7 +22,9 @@ class ValueGuardDistance(NodeVisitor):
         return self.visit(guard.formula, values)
 
     def visitBoolConst(self, node: BoolConst, _: Values) -> Value:
-        return bool(node.value)
+        if node.value:
+            return self._ops.e_times
+        return self._ops.e_plus
 
     def visitIntConst(self, node: IntConst, _: Values) -> Value:
         return int(node.value)

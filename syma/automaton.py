@@ -63,10 +63,12 @@ class SymbolicAutomaton(object):
     def add_location(self, location: int, initial=False, accepting=False):
         if location in self._graph.nodes:
             raise ValueError(f"Location {location} already exists in automaton")
-        if initial and self._initial_location is not None:
-            raise ValueError(
-                f"Initial Location already exists: {self.initial}. Cannot redefine."
-            )
+        if initial:
+            if self._initial_location is not None:
+                raise ValueError(
+                    f"Initial Location already exists: {self.initial}. Cannot redefine."
+                )
+            self._initial_location = location
         self._graph.add_node(location, initial=initial, accepting=accepting)
 
     def add_transition(self, src: int, dst: int, guard: Union[Constraint, Node, bool]):
