@@ -19,7 +19,8 @@ class ValueGuardDistance(NodeVisitor):
         self._dist = distance_fn
 
     def __call__(self, values: Values, guard: Constraint) -> Value:
-        return self.visit(guard.formula, values)
+        dist = self.visit(guard.formula, values)
+        return dist
 
     def visitBoolConst(self, node: BoolConst, _: Values) -> Value:
         if node.value:

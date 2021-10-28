@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from typing import Iterable, Optional, Tuple, Union
 
@@ -41,6 +42,7 @@ class SymbolicAutomaton(object):
         self._alphabet = Alphabet()  # alphabet (effective Boolean algebra)
         self._graph = nx.DiGraph()  # automaton structure
         self._initial_location = None
+        self.logger = logging.getLogger(__name__)
 
     def add_var(self, name, domain):
         self._alphabet.add_var(name, domain)
@@ -143,7 +145,9 @@ class SymbolicAutomaton(object):
             solver = z3.Solver()
             solver.add(z3.ForAll(list(self._alphabet.get_z3_vars()), disjunction))
             if solver.check() != z3.sat:
-                print(f"Automaton is incomplete at location: {self.location(q)}")
+                self.logger.warning(
+                    f"Automaton is incomplete at location: {self.location(q)}"
+                )
                 return False
 
         return True
