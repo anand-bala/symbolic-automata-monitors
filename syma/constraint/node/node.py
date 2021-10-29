@@ -40,6 +40,24 @@ class Node(ABC):
             other = RealConst(other)
         return GEQ(self, other)
 
+    def __eq__(self, other: Union["Node", bool, int, float]) -> "EQ":
+        if isinstance(other, bool):
+            other = BoolConst(other)
+        elif isinstance(other, int):
+            other = IntConst(other)
+        elif isinstance(other, float):
+            other = RealConst(other)
+        return EQ(self, other)
+
+    def __ne__(self, other: Union["Node", bool, int, float]) -> "NEQ":
+        if isinstance(other, bool):
+            other = BoolConst(other)
+        elif isinstance(other, int):
+            other = IntConst(other)
+        elif isinstance(other, float):
+            other = RealConst(other)
+        return NEQ(self, other)
+
     def __invert__(self) -> "Not":
         return Not(self)
 
