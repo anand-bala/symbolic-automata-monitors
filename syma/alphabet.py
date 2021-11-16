@@ -1,9 +1,8 @@
-from typing import (Generic, Iterable, NamedTuple, Optional, Tuple, TypeVar,
-                    Union)
+from typing import Iterable, Optional, Tuple, Union
 
 import z3
 
-from syma.constraint.node import BoolVar, IntVar, Node, RealVar
+from syma.constraint.node import BoolVar, IntVar, RealVar
 
 VarNode = Union[BoolVar, IntVar, RealVar]
 
