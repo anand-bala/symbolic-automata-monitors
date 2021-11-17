@@ -1,8 +1,23 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, List, Union
+from enum import Enum, auto, unique
+from typing import TYPE_CHECKING, List, TypeVar, Union
 
 if TYPE_CHECKING:
     from syma.constraint.node.visitor import NodeVisitor
+
+T = TypeVar("T")
+
+
+@unique
+class NodeType(Enum):
+    NumConst = auto()
+    NumVar = auto()
+    BoolConst = auto()
+    BoolVar = auto()
+    Comparison = auto()
+    And = auto()
+    Or = auto()
+    Not = auto()
 
 
 class Node(ABC):
@@ -11,6 +26,11 @@ class Node(ABC):
 
     def add_child(self, child: "Node"):
         self.children.append(child)
+
+    @property
+    @abstractmethod
+    def node_type(self) -> NodeType:
+        ...
 
     def __lt__(self, other: Union["Node", int, float]) -> "LT":
         if isinstance(other, int):
@@ -82,7 +102,7 @@ class Node(ABC):
         return And(self, other)
 
     @abstractmethod
-    def doVisit(self, visitor: "NodeVisitor", *args):
+    def doVisit(self, visitor: "NodeVisitor[T]", *args, **kwargs) -> T:
         ...
 
     def is_nnf(self) -> bool:
@@ -98,8 +118,12 @@ class BoolConst(Node):
     def value(self) -> bool:
         return self._value
 
-    def doVisit(self, visitor: "NodeVisitor", *args):
-        return visitor.visitBoolConst(self, *args)
+    @property
+    def node_type(self) -> NodeType:
+        return NodeType.BoolConst
+
+    def doVisit(self, visitor: "NodeVisitor[T]", *args, **kwargs) -> T:
+        return visitor.visitBoolConst(self, *args, **kwargs)
 
     def is_nnf(self) -> bool:
         return True
@@ -120,14 +144,18 @@ class IntConst(Node):
     def value(self) -> int:
         return self._value
 
+    @property
+    def node_type(self) -> NodeType:
+        return NodeType.NumConst
+
     def __str__(self) -> str:
         return str(self.value)
 
     def __repr__(self) -> str:
         return f"IntConst({self.value})"
 
-    def doVisit(self, visitor: "NodeVisitor", *args):
-        return visitor.visitIntConst(self, *args)
+    def doVisit(self, visitor: "NodeVisitor[T]", *args, **kwargs) -> T:
+        return visitor.visitIntConst(self, *args, **kwargs)
 
 
 class RealConst(Node):
@@ -139,14 +167,18 @@ class RealConst(Node):
     def value(self) -> float:
         return self._value
 
+    @property
+    def node_type(self) -> NodeType:
+        return NodeType.NumConst
+
     def __str__(self) -> str:
         return str(self.value)
 
     def __repr__(self) -> str:
         return f"RealConst({self.value})"
 
-    def doVisit(self, visitor: "NodeVisitor", *args):
-        return visitor.visitRealConst(self, *args)
+    def doVisit(self, visitor: "NodeVisitor[T]", *args, **kwargs) -> T:
+        return visitor.visitRealConst(self, *args, **kwargs)
 
 
 def Constant(value: Union[bool, int, float]) -> Node:
@@ -168,6 +200,10 @@ class BoolVar(Node):
     def name(self) -> str:
         return self._name
 
+    @property
+    def node_type(self) -> NodeType:
+        return NodeType.BoolVar
+
     def is_nnf(self) -> bool:
         return True
 
@@ -177,8 +213,8 @@ class BoolVar(Node):
     def __repr__(self) -> str:
         return f"BoolVar({self.name})"
 
-    def doVisit(self, visitor: "NodeVisitor", *args):
-        return visitor.visitBoolVar(self, *args)
+    def doVisit(self, visitor: "NodeVisitor[T]", *args, **kwargs) -> T:
+        return visitor.visitBoolVar(self, *args, **kwargs)
 
 
 class IntVar(Node):
@@ -190,14 +226,18 @@ class IntVar(Node):
     def name(self) -> str:
         return self._name
 
+    @property
+    def node_type(self) -> NodeType:
+        return NodeType.NumVar
+
     def __str__(self) -> str:
         return str(self.name)
 
     def __repr__(self) -> str:
         return f"IntVar({self.name})"
 
-    def doVisit(self, visitor: "NodeVisitor", *args):
-        return visitor.visitIntVar(self, *args)
+    def doVisit(self, visitor: "NodeVisitor[T]", *args, **kwargs) -> T:
+        return visitor.visitIntVar(self, *args, **kwargs)
 
 
 class RealVar(Node):
@@ -209,14 +249,18 @@ class RealVar(Node):
     def name(self) -> str:
         return self._name
 
+    @property
+    def node_type(self) -> NodeType:
+        return NodeType.NumVar
+
     def __str__(self) -> str:
         return str(self.name)
 
     def __repr__(self) -> str:
         return f"RealVar({self.name})"
 
-    def doVisit(self, visitor: "NodeVisitor", *args):
-        return visitor.visitRealVar(self, *args)
+    def doVisit(self, visitor: "NodeVisitor[T]", *args, **kwargs) -> T:
+        return visitor.visitRealVar(self, *args, **kwargs)
 
 
 class LEQ(Node):
@@ -225,14 +269,18 @@ class LEQ(Node):
         self.children.append(op1)
         self.children.append(op2)
 
+    @property
+    def node_type(self) -> NodeType:
+        return NodeType.Comparison
+
     def __str__(self):
-        return f"{str(self.children[0])} <= {str(self.children[1])}"
+        return f"({str(self.children[0])} <= {str(self.children[1])})"
 
     def __repr__(self):
         return f"LEQ({str(self.children[0])}, {str(self.children[1])})"
 
-    def doVisit(self, visitor: "NodeVisitor", *args):
-        return visitor.visitLEQ(self, *args)
+    def doVisit(self, visitor: "NodeVisitor[T]", *args, **kwargs) -> T:
+        return visitor.visitLEQ(self, *args, **kwargs)
 
     def is_nnf(self) -> bool:
         return True
@@ -244,14 +292,18 @@ class LT(Node):
         self.children.append(op1)
         self.children.append(op2)
 
+    @property
+    def node_type(self) -> NodeType:
+        return NodeType.Comparison
+
     def __str__(self):
-        return f"{str(self.children[0])} < {str(self.children[1])}"
+        return f"({str(self.children[0])} < {str(self.children[1])})"
 
     def __repr__(self):
         return f"LT({str(self.children[0])}, {str(self.children[1])})"
 
-    def doVisit(self, visitor: "NodeVisitor", *args):
-        return visitor.visitLT(self, *args)
+    def doVisit(self, visitor: "NodeVisitor[T]", *args, **kwargs) -> T:
+        return visitor.visitLT(self, *args, **kwargs)
 
     def is_nnf(self) -> bool:
         return True
@@ -263,14 +315,18 @@ class GEQ(Node):
         self.children.append(op1)
         self.children.append(op2)
 
+    @property
+    def node_type(self) -> NodeType:
+        return NodeType.Comparison
+
     def __str__(self):
-        return f"{str(self.children[0])} >= {str(self.children[1])}"
+        return f"({str(self.children[0])} >= {str(self.children[1])})"
 
     def __repr__(self):
         return f"GEQ({str(self.children[0])}, {str(self.children[1])})"
 
-    def doVisit(self, visitor: "NodeVisitor", *args):
-        return visitor.visitGEQ(self, *args)
+    def doVisit(self, visitor: "NodeVisitor[T]", *args, **kwargs) -> T:
+        return visitor.visitGEQ(self, *args, **kwargs)
 
     def is_nnf(self) -> bool:
         return True
@@ -282,14 +338,18 @@ class GT(Node):
         self.children.append(op1)
         self.children.append(op2)
 
+    @property
+    def node_type(self) -> NodeType:
+        return NodeType.Comparison
+
     def __str__(self):
-        return f"{str(self.children[0])} > {str(self.children[1])}"
+        return f"({str(self.children[0])} > {str(self.children[1])})"
 
     def __repr__(self):
         return f"GT({str(self.children[0])}, {str(self.children[1])})"
 
-    def doVisit(self, visitor: "NodeVisitor", *args):
-        return visitor.visitGT(self, *args)
+    def doVisit(self, visitor: "NodeVisitor[T]", *args, **kwargs) -> T:
+        return visitor.visitGT(self, *args, **kwargs)
 
     def is_nnf(self) -> bool:
         return True
@@ -301,14 +361,18 @@ class EQ(Node):
         self.children.append(op1)
         self.children.append(op2)
 
+    @property
+    def node_type(self) -> NodeType:
+        return NodeType.Comparison
+
     def __str__(self):
-        return f"{str(self.children[0])} == {str(self.children[1])}"
+        return f"({str(self.children[0])} == {str(self.children[1])})"
 
     def __repr__(self):
         return f"EQ({str(self.children[0])}, {str(self.children[1])})"
 
-    def doVisit(self, visitor: "NodeVisitor", *args):
-        return visitor.visitEQ(self, *args)
+    def doVisit(self, visitor: "NodeVisitor[T]", *args, **kwargs) -> T:
+        return visitor.visitEQ(self, *args, **kwargs)
 
     def is_nnf(self) -> bool:
         return True
@@ -320,14 +384,18 @@ class NEQ(Node):
         self.children.append(op1)
         self.children.append(op2)
 
+    @property
+    def node_type(self) -> NodeType:
+        return NodeType.Comparison
+
     def __str__(self):
-        return f"{str(self.children[0])}) != ({str(self.children[1])}"
+        return f"({str(self.children[0])}) != ({str(self.children[1])})"
 
     def __repr__(self):
         return f"NEQ({str(self.children[0])}, {str(self.children[1])})"
 
-    def doVisit(self, visitor: "NodeVisitor", *args):
-        return visitor.visitNEQ(self, *args)
+    def doVisit(self, visitor: "NodeVisitor[T]", *args, **kwargs) -> T:
+        return visitor.visitNEQ(self, *args, **kwargs)
 
     def is_nnf(self) -> bool:
         return True
@@ -338,14 +406,18 @@ class Not(Node):
         Node.__init__(self)
         self.children.append(op)
 
+    @property
+    def node_type(self) -> NodeType:
+        return NodeType.Not
+
     def __str__(self):
-        return f"not ({str(self.children[0])})"
+        return f"not {str(self.children[0])}"
 
     def __repr__(self):
         return f"Not({str(self.children[0])})"
 
-    def doVisit(self, visitor: "NodeVisitor", *args):
-        return visitor.visitNot(self, *args)
+    def doVisit(self, visitor: "NodeVisitor[T]", *args, **kwargs) -> T:
+        return visitor.visitNot(self, *args, **kwargs)
 
     def is_nnf(self) -> bool:
         return False
@@ -358,21 +430,25 @@ class And(Node):
             raise ValueError("At least 2 operands required by AND")
         self.children = []
         for op in ops:
-            assert isinstance(op, Node)
-            if isinstance(op, And):
+            if op.node_type == NodeType.And:
                 self.children.extend(op.children)
             else:
                 self.children.append(op)
 
+    @property
+    def node_type(self) -> NodeType:
+        return NodeType.And
+
     def __str__(self):
-        return " and ".join([f"({str(child)})" for child in self.children])
+        s = " & ".join([str(child) for child in self.children])
+        return f"({s})"
 
     def __repr__(self):
         children = ", ".join([f"{repr(child)}" for child in self.children])
         return f"And({children})"
 
-    def doVisit(self, visitor: "NodeVisitor", *args):
-        return visitor.visitAnd(self, *args)
+    def doVisit(self, visitor: "NodeVisitor[T]", *args, **kwargs) -> T:
+        return visitor.visitAnd(self, *args, **kwargs)
 
     def is_nnf(self) -> bool:
         for child in self.children:
@@ -388,21 +464,25 @@ class Or(Node):
             raise ValueError("At least 2 operands required by OR")
         self.children = []
         for op in ops:
-            assert isinstance(op, Node)
-            if isinstance(op, Or):
+            if op.node_type == NodeType.Or:
                 self.children.extend(op.children)
             else:
                 self.children.append(op)
 
+    @property
+    def node_type(self) -> NodeType:
+        return NodeType.Or
+
     def __str__(self):
-        return " or ".join([f"({str(child)})" for child in self.children])
+        s = " | ".join([str(child) for child in self.children])
+        return f"({s})"
 
     def __repr__(self):
         children = ", ".join([f"{repr(child)}" for child in self.children])
         return f"Or({children})"
 
-    def doVisit(self, visitor: "NodeVisitor", *args):
-        return visitor.visitOr(self, *args)
+    def doVisit(self, visitor: "NodeVisitor[T]", *args, **kwargs) -> T:
+        return visitor.visitOr(self, *args, **kwargs)
 
     def is_nnf(self) -> bool:
         for child in self.children:

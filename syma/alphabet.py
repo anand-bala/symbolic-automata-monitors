@@ -2,7 +2,7 @@ from typing import Iterable, Optional, Tuple, Union
 
 import z3
 
-from syma.constraint.node import BoolVar, IntVar, RealVar
+from syma.constraint.node import BoolVar, IntVar, NodeType, RealVar
 
 VarNode = Union[BoolVar, IntVar, RealVar]
 
@@ -41,7 +41,7 @@ class Alphabet(object):
         return var
 
     def add_var(self, var: VarNode, domain: Optional[Tuple]):
-        assert isinstance(var, (BoolVar, IntVar, RealVar))
+        assert var.node_type in [NodeType.BoolVar, NodeType.NumVar]
         if var.name in self.vars:
             raise ValueError(f"Redeclaration of variable {var.name}")
         self.vars[var.name] = var

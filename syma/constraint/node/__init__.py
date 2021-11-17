@@ -1,6 +1,6 @@
 from .node import (EQ, GEQ, GT, LEQ, LT, NEQ, And, BoolConst, BoolVar,
-                   Constant, IntConst, IntVar, Node, Not, Or, RealConst,
-                   RealVar)
+                   Constant, IntConst, IntVar, Node, NodeType, Not, Or,
+                   RealConst, RealVar)
 from .visitor import NodeVisitor
 
 __all__ = [
@@ -22,4 +22,5 @@ __all__ = [
     "RealConst",
     "RealVar",
     "NodeVisitor",
+    "NodeType",
 ]
