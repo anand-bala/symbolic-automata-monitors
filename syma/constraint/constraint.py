@@ -2,8 +2,10 @@ from typing import TYPE_CHECKING, Mapping, Tuple, Union
 
 import z3
 
+from syma.constraint.minimization import minimize_and
 from syma.constraint.node import BoolVar, IntVar, Node, RealVar
 from syma.constraint.smt_translator import Formula2SMT
+from syma.constraint.transform import to_dnf, to_nnf
 
 if TYPE_CHECKING:
     from syma.alphabet import Alphabet
@@ -57,6 +59,17 @@ class Constraint(object):
         solver = z3.Solver()
         solver.add(new_expr)
         return solver.check() == z3.sat
+
+    def to_nnf(self) -> "Constraint":
+        return Constraint(self.alphabet, to_nnf(self.formula))
+
+    def to_dnf(self) -> "Constraint":
+        return Constraint(self.alphabet, to_dnf(self.formula))
+
+    def minimize(self) -> "Constraint":
+        dnf = self.to_dnf()
+        minim = minimize_and(self.alphabet, dnf.formula)
+        return Constraint(self.alphabet, minim)
 
     def __repr__(self):
         return repr(self._formula)

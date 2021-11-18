@@ -9,6 +9,7 @@ from syma.alphabet import Alphabet
 from syma.constraint.constraint import Constraint
 from syma.constraint.node import BoolVar, IntVar, RealVar
 from syma.constraint.node.node import BoolConst, Node
+from syma.constraint.transform import to_dnf
 
 VarNode = Union[BoolVar, IntVar, RealVar]
 

@@ -71,3 +71,7 @@ class Formula2SMT(NodeVisitor[z3.ExprRef]):
     def visitOr(self, node: Or) -> z3.ExprRef:
         ops = [self.visit(child) for child in node.children]
         return z3.Or(*ops)  # type: ignore
+
+
+def to_smt(formula: Node) -> z3.ExprRef:
+    return Formula2SMT(formula).translate()
