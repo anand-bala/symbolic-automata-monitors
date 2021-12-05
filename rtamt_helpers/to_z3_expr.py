@@ -1,7 +1,10 @@
+"""Convert predicates to Z3 formula"""
+
 import itertools
 import string
 from typing import Dict, Tuple
 
+import z3
 from rtamt import STLSpecification
 from rtamt.node.abstract_node import AbstractNode
 from rtamt.node.arithmetic.abs import Abs
@@ -38,45 +41,53 @@ from rtamt.node.stl.timed_once import TimedOnce
 from rtamt.node.stl.timed_precedes import TimedPrecedes
 from rtamt.node.stl.timed_since import TimedSince
 from rtamt.node.stl.timed_until import TimedUntil
+from rtamt.spec.stl.discrete_time.comp_op import StlComparisonOperator
 from rtamt.spec.stl.discrete_time.visitor import STLVisitor
 
 NOT_IMPLEMENTED = "You should implement this."
 
 
-class ToLtlString(STLVisitor):
-    """Convert an STL formula to a an LTL formula.
-
-    1. Any predicate (symbolic) is assigned a label and stored in a map.
-    2. Any Bounded Temporal Operator is converted to a sequence of nexted Next
-       operations.
-    """
-
-    def __init__(self):
+class ToZ3Expr(STLVisitor):
+    def __init__(self, var_type_dict: Dict[str, str]):
         super().__init__()
+        self.var_type_dict = var_type_dict
 
-        self.predicate_map = dict()  # type: Dict[str, AbstractNode]
-
-        self._label_prefix = "pred_"
-        self._label_gen = itertools.product(
-            string.digits,
-            string.ascii_lowercase,
-        )
-
-    def _next_label(self) -> str:
-        """Should pring a0, b0, c0, ..."""
-        return self._label_prefix + "".join(reversed(next(self._label_gen)))
-
-    def convert(self, spec: STLSpecification) -> Tuple[str, Dict[str, AbstractNode]]:
+    def convert(self, spec: STLSpecification) -> z3.ExprRef:
         formula = self.visit(spec, ())
-        return formula, self.predicate_map
+        return formula
 
-    def visitPredicate(self, element: Predicate, _) -> str:
-        label = self._next_label()
-        self.predicate_map[label] = element
-        return label
+    def visitPredicate(self, element: Predicate, args) -> z3.ExprRef:
+        lhs = self.visit(element.children[0], args)
+        rhs = self.visit(element.children[1], args)
 
-    def visitVariable(self, element: Variable, args):
-        raise NotImplementedError(NOT_IMPLEMENTED)
+        assert element.operator == StlComparisonOperator.GREATER
+
+        if element.operator == StlComparisonOperator.GEQ:
+            return lhs >= rhs
+        if element.operator == StlComparisonOperator.LEQ:
+            return lhs <= rhs
+        if element.operator == StlComparisonOperator.GREATER:
+            return lhs > rhs
+        if element.operator == StlComparisonOperator.LESS:
+            return lhs < rhs
+        if element.operator == StlComparisonOperator.EQUAL:
+            return lhs == rhs
+        if element.operator == StlComparisonOperator.NEQ:
+            return lhs != rhs
+
+        raise RuntimeError("This shouldn't happen")
+
+    def visitVariable(self, element: Variable, _) -> z3.ExprRef:
+        var_name = element.name  # type: str
+        var_type = self.var_type_dict[var_name]
+        if var_type == "int":
+            return z3.Int(var_name)
+        if var_type == "float":
+            return z3.Real(var_name)
+        raise NotImplementedError(f"Unsupported type {var_type}")
+
+    def visitConstant(self, element: Constant, args):
+        return element.val
 
     def visitAbs(self, element: Abs, args):
         raise NotImplementedError(NOT_IMPLEMENTED)
@@ -102,46 +113,32 @@ class ToLtlString(STLVisitor):
     def visitDivision(self, element: Division, args):
         raise NotImplementedError(NOT_IMPLEMENTED)
 
-    def visitNot(self, element: Neg, args) -> str:
-        child_str = self.visit(element.children[0], args)
-        return f"! {child_str}"
+    def visitNot(self, element: Neg, args):
+        raise NotImplementedError(NOT_IMPLEMENTED)
 
     def visitAnd(self, element: Conjunction, args):
-        children = [f"{self.visit(child, args)}" for child in element.children]
-        return "(" + " & ".join(children) + ")"
+        raise NotImplementedError(NOT_IMPLEMENTED)
 
     def visitOr(self, element: Disjunction, args):
-        children = [f"({self.visit(child, args)})" for child in element.children]
-        return "(" + " | ".join(children) + ")"
+        raise NotImplementedError(NOT_IMPLEMENTED)
 
     def visitImplies(self, element: Implies, args):
-        left_child = self.visit(element.children[0], args)
-        right_child = self.visit(element.children[1], args)
-        return f"( !{left_child} | {right_child} )"
+        raise NotImplementedError(NOT_IMPLEMENTED)
 
     def visitIff(self, element: Iff, args):
-        left_child = self.visit(element.children[0], args)
-        right_child = self.visit(element.children[1], args)
-        return f"( ( {left_child} & {right_child} ) | ( ! {left_child} & ! {right_child} ) )"
+        raise NotImplementedError(NOT_IMPLEMENTED)
 
     def visitXor(self, element: Xor, args):
-        left_child = self.visit(element.children[0], args)
-        right_child = self.visit(element.children[1], args)
-        return f"( ( {left_child} & ! {right_child} ) | ( ! {left_child} & {right_child} ) )"
+        raise NotImplementedError(NOT_IMPLEMENTED)
 
     def visitEventually(self, element: Eventually, args):
-        child = self.visit(element.children[0], args)
-        return f"( F {child} )"
+        raise NotImplementedError(NOT_IMPLEMENTED)
 
     def visitAlways(self, element: Always, args):
-        child = self.visit(element.children[0], args)
-        return f"( G {child} )"
+        raise NotImplementedError(NOT_IMPLEMENTED)
 
     def visitUntil(self, element: Until, args):
-        left = self.visit(element.children[0], args)
-        right = self.visit(element.children[1], args)
-
-        return f"( {left} U {right} )"
+        raise NotImplementedError(NOT_IMPLEMENTED)
 
     def visitOnce(self, element: Once, args):
         raise NotImplementedError(NOT_IMPLEMENTED)
@@ -158,15 +155,11 @@ class ToLtlString(STLVisitor):
     def visitFall(self, element: Fall, args):
         raise NotImplementedError(NOT_IMPLEMENTED)
 
-    def visitConstant(self, element: Constant, args):
-        raise NotImplementedError(NOT_IMPLEMENTED)
-
     def visitPrevious(self, element: Previous, args):
         raise NotImplementedError(NOT_IMPLEMENTED)
 
     def visitNext(self, element, args):
-        child = self.visit(element.children[0], args)
-        return f"( X {child} )"
+        raise NotImplementedError(NOT_IMPLEMENTED)
 
     def visitTimedPrecedes(self, element, args):
         raise NotImplementedError(NOT_IMPLEMENTED)
@@ -181,55 +174,17 @@ class ToLtlString(STLVisitor):
         raise NotImplementedError(NOT_IMPLEMENTED)
 
     def visitTimedAlways(self, element: TimedAlways, args):
-        child = self.visit(element.children[0], args)
-        length = element.end - element.begin
-        assert isinstance(length, int)
-
-        formula = str(child)  # len = 0
-        for _ in range(length):  # len = 1..length
-            formula = f"{child} & X ({formula})"
-
-        for _ in range(element.begin):  # if begin > 0
-            formula = f"X({formula})"
-
-        return formula
+        raise NotImplementedError(NOT_IMPLEMENTED)
 
     def visitTimedEventually(self, element, args):
-        child = self.visit(element.children[0], args)
-        length = element.end - element.begin
-        assert isinstance(length, int)
-
-        formula = str(child)  # len = 0
-        for _ in range(length):  # len = 1..length
-            formula = f"({child} | X {formula})"
-
-        for _ in range(element.begin):  # if begin > 0
-            formula = f"X({formula})"
-
-        return formula
+        raise NotImplementedError(NOT_IMPLEMENTED)
 
     def visitTimedUntil(self, element: TimedUntil, args):
-        """
-        Here we use the decomposition used in [donze2013efficient]_.
-
-        .. [donze2013efficient] A. Donzé, T. Ferrère, and O. Maler,
-           "Efficient Robust Monitoring for STL,"
-           in Computer Aided Verification, Berlin, Heidelberg, 2013, pp. 264–279.
-           doi: 10.1007/978-3-642-39799-8_19.
-
-        Essentially,
-
-            p U[a, b] q  <=>  (F[a, b] q) & (p U[a, inf) q)
-
-        and
-
-            p U[a, inf)  <=>  G[0,a] (p U q)
-        """
         raise NotImplementedError(NOT_IMPLEMENTED)
 
     def visitDefault(self, element, args):
         raise NotImplementedError(NOT_IMPLEMENTED)
 
 
-def to_ltl_string(spec: STLSpecification) -> Tuple[str, Dict[str, AbstractNode]]:
-    return ToLtlString().convert(spec.top)
+def to_z3_expr(spec: STLSpecification) -> z3.ExprRef:
+    return ToZ3Expr(spec.var_type_dict).convert(spec.top)
