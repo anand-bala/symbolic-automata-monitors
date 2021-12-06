@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, Iterable, Mapping, Tuple, Union
 import z3
 
 from syma.constraint.minimization import minimize_and
-from syma.constraint.node import BoolVar, IntVar, Node, RealVar
-from syma.constraint.node.node import Constant, NodeType
+from syma.constraint.node.node import (BoolConst, BoolVar, Constant, IntVar,
+                                       Node, NodeType, RealVar)
 from syma.constraint.smt_translator import Formula2SMT
 from syma.constraint.transform import to_dnf, to_nnf
 
@@ -37,8 +37,11 @@ def check_trivially_true(vars: Iterable[z3.ExprRef], expr: z3.ExprRef) -> bool:
 
 
 class Constraint(object):
-    def __init__(self, alphabet: "Alphabet", formula: Node):
+    def __init__(self, alphabet: "Alphabet", formula: Union[Node, bool]):
         self._alphabet = alphabet
+        if isinstance(formula, bool):
+            formula = BoolConst(formula)
+
         formula = minimize_and(self.alphabet, to_dnf(formula))
         z3_expr = formula_to_smt(formula)
 
