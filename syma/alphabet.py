@@ -25,9 +25,9 @@ class Alphabet(object):
         self.vars: dict[str, VarNode] = dict()  # Map of variable names to variable node
         self.domains: dict[str, Optional[Tuple]] = dict()  # Domain Map
 
-    def declare_bool(self, name: str, domain: Optional[Tuple] = None) -> BoolVar:
+    def declare_bool(self, name: str) -> BoolVar:
         var = BoolVar(name)
-        self.add_var(var, domain)
+        self.add_var(var, None)
         return var
 
     def declare_int(self, name: str, domain: Optional[Tuple] = None) -> IntVar:
@@ -40,7 +40,7 @@ class Alphabet(object):
         self.add_var(var, domain)
         return var
 
-    def add_var(self, var: VarNode, domain: Optional[Tuple]):
+    def add_var(self, var: VarNode, domain: Optional[Tuple] = None):
         assert var.node_type in [NodeType.BoolVar, NodeType.NumVar]
         if var.name in self.vars:
             raise ValueError(f"Redeclaration of variable {var.name}")
@@ -54,10 +54,24 @@ class Alphabet(object):
         return self.domains[var_name]
 
     def get_z3_vars(self) -> Iterable[z3.ExprRef]:
-        for var in self.vars.values():
-            if isinstance(var, BoolVar):
-                yield z3.Bool(var.name)
-            if isinstance(var, IntVar):
-                yield z3.Int(var.name)
-            if isinstance(var, RealVar):
-                yield z3.Real(var.name)
+        for var in self.vars.keys():
+            yield self.get_z3_var(var)
+
+    def get_z3_var(self, var_name: str) -> z3.ExprRef:
+        var = self.get_var(var_name)
+        if isinstance(var, BoolVar):
+            return z3.Bool(var.name)
+        if isinstance(var, IntVar):
+            return z3.Int(var.name)
+        if isinstance(var, RealVar):
+            return z3.Real(var.name)
+
+        return NotImplemented
+
+    def get_z3_domain(self, var_name: str) -> Optional[z3.BoolRef]:
+        domain = self.get_domain(var_name)
+        var = self.get_z3_var(var_name)
+        if domain is None:
+            return None
+        low, high = domain
+        return z3.And(var >= low, var <= high)  #  type: ignore

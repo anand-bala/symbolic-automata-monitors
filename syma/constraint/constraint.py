@@ -1,9 +1,10 @@
-from typing import TYPE_CHECKING, Mapping, Tuple, Union
+from typing import TYPE_CHECKING, Iterable, Mapping, Tuple, Union
 
 import z3
 
 from syma.constraint.minimization import minimize_and
 from syma.constraint.node import BoolVar, IntVar, Node, RealVar
+from syma.constraint.node.node import Constant, NodeType
 from syma.constraint.smt_translator import Formula2SMT
 from syma.constraint.transform import to_dnf, to_nnf
 
@@ -19,11 +20,39 @@ def formula_to_smt(formula: Node) -> z3.ExprRef:
     return Formula2SMT(formula).translate()
 
 
+def check_trivially_false(formula: z3.ExprRef) -> bool:
+    solver = z3.Solver()
+    solver.add(formula)
+    result = solver.check()
+
+    return result == z3.unsat
+
+
+def check_trivially_true(vars: Iterable[z3.ExprRef], expr: z3.ExprRef) -> bool:
+    solver = z3.Solver()
+    solver.add(z3.ForAll(list(vars), expr))
+    result = solver.check()
+
+    return result == z3.sat
+
+
 class Constraint(object):
     def __init__(self, alphabet: "Alphabet", formula: Node):
         self._alphabet = alphabet
+        formula = minimize_and(self.alphabet, to_dnf(formula))
+        z3_expr = formula_to_smt(formula)
+
+        if check_trivially_false(z3_expr):
+            formula = Constant(False)
+            z3_expr = z3.BoolVal(False)
+        elif check_trivially_true(alphabet.get_z3_vars(), z3_expr):
+            formula = Constant(True)
+            z3_expr = z3.BoolVal(True)
+        else:
+            formula = formula
+
         self._formula = formula
-        self._smt_formula: z3.ExprRef = formula_to_smt(self._formula)
+        self._smt_formula: z3.ExprRef = z3_expr
 
     @property
     def formula(self) -> Node:
@@ -36,6 +65,18 @@ class Constraint(object):
     @property
     def expr(self) -> z3.ExprRef:
         return self._smt_formula
+
+    def is_trivially_false(self) -> bool:
+        """Check if the formula is trivially false"""
+        if self.formula.node_type == NodeType.BoolConst:
+            return self.formula.value is False  # type: ignore
+        return check_trivially_false(self.expr)
+
+    def is_trivially_true(self) -> bool:
+        """Check if the formula is trivially true"""
+        if self.formula.node_type == NodeType.BoolConst:
+            return self.formula.value  # type: ignore
+        return check_trivially_true(self.alphabet.get_z3_vars(), self.expr)
 
     def check_sat(self, values: Mapping[str, Value]) -> bool:
         def convert(var_name: str, var_val: Value) -> Tuple[z3.ExprRef, z3.ExprRef]:

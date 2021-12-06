@@ -4,7 +4,6 @@ import itertools
 import string
 from typing import Dict, Tuple, Union
 
-import z3
 from rtamt import STLSpecification
 from rtamt.node.abstract_node import AbstractNode
 from rtamt.node.arithmetic.abs import Abs
@@ -44,19 +43,21 @@ from rtamt.node.stl.timed_until import TimedUntil
 from rtamt.spec.stl.discrete_time.comp_op import StlComparisonOperator
 from rtamt.spec.stl.discrete_time.visitor import STLVisitor
 
+import syma.constraint.node as sym_node
+
 NOT_IMPLEMENTED = "You should implement this."
 
 
-class ToZ3Expr(STLVisitor):
+class ToConstraint(STLVisitor):
     def __init__(self, var_type_dict: Dict[str, str]):
         super().__init__()
         self.var_type_dict = var_type_dict
 
-    def convert(self, spec: Union[STLSpecification, AbstractNode]) -> z3.ExprRef:
+    def convert(self, spec: Union[STLSpecification, AbstractNode]) -> sym_node.Node:
         formula = self.visit(spec, ())
         return formula
 
-    def visitPredicate(self, element: Predicate, args) -> z3.ExprRef:
+    def visitPredicate(self, element: Predicate, args) -> sym_node.Node:
         lhs = self.visit(element.children[0], args)
         rhs = self.visit(element.children[1], args)
 
@@ -75,17 +76,19 @@ class ToZ3Expr(STLVisitor):
 
         raise RuntimeError("This shouldn't happen")
 
-    def visitVariable(self, element: Variable, _) -> z3.ExprRef:
+    def visitVariable(self, element: Variable, _) -> sym_node.Node:
         var_name = element.name  # type: str
         var_type = self.var_type_dict[var_name]
         if var_type == "int":
-            return z3.Int(var_name)
+            return sym_node.IntVar(var_name)
         if var_type == "float":
-            return z3.Real(var_name)
+            return sym_node.RealVar(var_name)
+        if var_type == "bool":
+            return sym_node.BoolVar(var_name)
         raise NotImplementedError(f"Unsupported type {var_type}")
 
     def visitConstant(self, element: Constant, args):
-        return element.val
+        return sym_node.Constant(element.val)
 
     def visitAbs(self, element: Abs, args):
         raise NotImplementedError(NOT_IMPLEMENTED)
@@ -111,14 +114,17 @@ class ToZ3Expr(STLVisitor):
     def visitDivision(self, element: Division, args):
         raise NotImplementedError(NOT_IMPLEMENTED)
 
-    def visitNot(self, element: Neg, args):
-        raise NotImplementedError(NOT_IMPLEMENTED)
+    def visitNot(self, element: Neg, args) -> sym_node.Node:
+        child = self.visit(element.children[0], args)
+        return sym_node.Not(child)
 
     def visitAnd(self, element: Conjunction, args):
-        raise NotImplementedError(NOT_IMPLEMENTED)
+        children = [self.visit(child, args) for child in element.children]
+        return sym_node.And(*children)
 
     def visitOr(self, element: Disjunction, args):
-        raise NotImplementedError(NOT_IMPLEMENTED)
+        children = [self.visit(child, args) for child in element.children]
+        return sym_node.Or(*children)
 
     def visitImplies(self, element: Implies, args):
         raise NotImplementedError(NOT_IMPLEMENTED)
@@ -184,9 +190,11 @@ class ToZ3Expr(STLVisitor):
         raise NotImplementedError(NOT_IMPLEMENTED)
 
 
-def to_z3_expr(spec: STLSpecification) -> z3.ExprRef:
-    return ToZ3Expr(spec.var_type_dict).convert(spec.top)
+def from_node_to_constraint(
+    spec: AbstractNode, var_type_dict: Dict[str, str]
+) -> sym_node.Node:
+    return ToConstraint(var_type_dict).convert(spec)
 
 
-def from_node_to_z3(spec: AbstractNode, var_type_dict: Dict[str, str]) -> z3.ExprRef:
-    return ToZ3Expr(var_type_dict).convert(spec)
+def to_constraint(spec: STLSpecification) -> sym_node.Node:
+    return from_node_to_constraint(spec.top, spec.var_type_dict)

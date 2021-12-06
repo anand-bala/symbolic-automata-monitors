@@ -5,11 +5,9 @@ from typing import Iterable, Optional, Tuple, Union
 import networkx as nx
 import z3
 
-from syma.alphabet import Alphabet
 from syma.constraint.constraint import Constraint
-from syma.constraint.node import BoolVar, IntVar, RealVar
-from syma.constraint.node.node import BoolConst, Node
-from syma.constraint.transform import to_dnf
+from syma.constraint.node.node import (BoolConst, BoolVar, IntVar, Node,
+                                       NodeType, RealVar)
 
 VarNode = Union[BoolVar, IntVar, RealVar]
 
@@ -40,6 +38,8 @@ class SymbolicAutomaton(object):
     """
 
     def __init__(self):
+        from syma.alphabet import Alphabet
+
         self._alphabet = Alphabet()  # alphabet (effective Boolean algebra)
         self._graph = nx.DiGraph()  # automaton structure
         self._initial_location = None
@@ -83,7 +83,10 @@ class SymbolicAutomaton(object):
             guard = Constraint(self._alphabet, guard)
         elif isinstance(guard, bool):
             guard = Constraint(self._alphabet, BoolConst(guard))
-        self._graph.add_edge(src, dst, guard=guard)
+
+        if guard.is_trivially_false():
+            return
+        self._graph.add_edge(src, dst, guard=guard.to_dnf())
 
     def location(self, node: int) -> Location:
         data = self._graph.nodes[node]
