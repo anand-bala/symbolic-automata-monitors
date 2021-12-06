@@ -81,24 +81,48 @@ class Node(ABC):
     def __invert__(self) -> "Not":
         return Not(self)
 
-    def __or__(self, other: Union["Node", bool]) -> "Or":
+    def __or__(self, other: Union["Node", bool]) -> "Node":
         if isinstance(other, bool):
             other = BoolConst(other)
+        if self.is_true() or other.is_true():
+            return BoolConst(True)
+        if self.is_false():
+            return other
+        if other.is_false():
+            return self
         return Or(self, other)
 
-    def __ror__(self, other: Union["Node", bool]) -> "Or":
+    def __ror__(self, other: Union["Node", bool]) -> "Node":
         if isinstance(other, bool):
             other = BoolConst(other)
+        if self.is_true() or other.is_true():
+            return BoolConst(True)
+        if self.is_false():
+            return other
+        if other.is_false():
+            return self
         return Or(self, other)
 
-    def __and__(self, other: Union["Node", bool]) -> "And":
+    def __and__(self, other: Union["Node", bool]) -> "Node":
         if isinstance(other, bool):
             other = BoolConst(other)
+        if self.is_false() or other.is_false():
+            return BoolConst(False)
+        if self.is_true():
+            return other
+        if other.is_true():
+            return self
         return And(self, other)
 
-    def __rand__(self, other: Union["Node", bool]) -> "And":
+    def __rand__(self, other: Union["Node", bool]) -> "Node":
         if isinstance(other, bool):
             other = BoolConst(other)
+        if self.is_false() or other.is_false():
+            return BoolConst(False)
+        if self.is_true():
+            return other
+        if other.is_true():
+            return self
         return And(self, other)
 
     @abstractmethod
@@ -106,6 +130,18 @@ class Node(ABC):
         ...
 
     def is_nnf(self) -> bool:
+        return False
+
+    def is_true(self) -> bool:
+        if self.node_type == NodeType.BoolConst:
+            assert isinstance(self, BoolConst)
+            return self.value
+        return False
+
+    def is_false(self) -> bool:
+        if self.node_type == NodeType.BoolConst:
+            assert isinstance(self, BoolConst)
+            return not self.value
         return False
 
 

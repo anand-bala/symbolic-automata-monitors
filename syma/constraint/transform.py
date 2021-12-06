@@ -1,3 +1,5 @@
+from functools import reduce
+
 from syma.constraint.node import (EQ, GEQ, GT, LEQ, LT, NEQ, And, BoolConst,
                                   BoolVar, IntConst, IntVar, Node, NodeType,
                                   NodeVisitor, Not, Or, RealConst, RealVar)
@@ -150,8 +152,9 @@ class ToDNF(NodeVisitor[Node]):
     def visitOr(self, node: Or) -> Node:
         # We don't have to do much.
         # Just apply the transform to the children, which should output them in DNF.
-        ops = [self.visit(child) for child in node.children]
-        return Or(*ops)
+        return reduce(
+            lambda x, y: x | y, [self.visit(child) for child in node.children]
+        )
 
     def _distributeAnd(self, a: Node, b: Node) -> Node:
         """Given two DNF formulas, convert `a & b` to DNF."""
@@ -169,10 +172,9 @@ class ToDNF(NodeVisitor[Node]):
         # recursively applies.
         distributed_ops = [self._distributeAnd(p, b) for p in a.children]
         # Post condition: List[Or]
-        return Or(*distributed_ops)
+        return reduce(lambda x, y: x | y, distributed_ops)
 
     def visitAnd(self, node: And) -> Node:
-        from functools import reduce
 
         # We need to distribute the AND over the ORs.
         # First, apply the transform to the children.
