@@ -425,7 +425,7 @@ class NEQ(Node):
         return NodeType.Comparison
 
     def __str__(self):
-        return f"({str(self.children[0])}) != ({str(self.children[1])})"
+        return f"({str(self.children[0])} != {str(self.children[1])})"
 
     def __repr__(self):
         return f"NEQ({str(self.children[0])}, {str(self.children[1])})"

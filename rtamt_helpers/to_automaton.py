@@ -11,16 +11,26 @@ from .to_ltl_string import to_ltl_string
 from .to_z3_expr import from_node_to_z3
 
 
-def to_omega_automaton(formula: str) -> spot.twa_graph:
-    aut = spot.translate(
-        formula,
-        "Buchi",
-        "sbacc",
-        "state-based",
-        "complete",
-        "unambiguous",
-        "deterministic",
-    )
+def to_omega_automaton(formula: str, *, use_ltlf=False) -> spot.twa_graph:
+    if use_ltlf:
+        aut = spot.from_ltlf(formula).translate("Buchi", "state-based", "complete")
+        # Remove "alive" atomic proposition
+        rem = spot.remove_ap()
+        rem.add_ap("alive")
+        aut = rem.strip(aut)
+        # Simplify result and print it.  Use postprocess('ba', 'det')
+        # if you always want a deterministic automaton.
+        aut = spot.postprocess(aut, "ba", "det", "complete", "unambiguous")
+    else:
+        aut = spot.translate(
+            formula,
+            "Buchi",
+            "sbacc",
+            "state-based",
+            "complete",
+            "unambiguous",
+            "deterministic",
+        )
     return aut
 
 
@@ -34,7 +44,7 @@ def get_z3_predicates(
     return z3_predicates
 
 
-def print_automaton_gen_code(spec: STLSpecification):
+def print_automaton_gen_code(spec: STLSpecification, *, use_ltlf=False):
     ltl_formula, predicate_map = to_ltl_string(spec)
 
     print(f"# STL Formula is: {spec.spec}")
@@ -47,7 +57,7 @@ def print_automaton_gen_code(spec: STLSpecification):
     }
 
     # Convert the LTL formula to an automaton
-    aut = to_omega_automaton(ltl_formula)
+    aut = to_omega_automaton(ltl_formula, use_ltlf=use_ltlf)
     assert aut.is_deterministic()  # type: ignore
     assert aut.prop_complete().is_true()  # type: ignore
     # assert aut.prop_terminal().is_true()  # type: ignore
