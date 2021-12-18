@@ -93,15 +93,7 @@ class Node(ABC):
         return Or(self, other)
 
     def __ror__(self, other: Union["Node", bool]) -> "Node":
-        if isinstance(other, bool):
-            other = BoolConst(other)
-        if self.is_true() or other.is_true():
-            return BoolConst(True)
-        if self.is_false():
-            return other
-        if other.is_false():
-            return self
-        return Or(self, other)
+        return self.__or__(other)
 
     def __and__(self, other: Union["Node", bool]) -> "Node":
         if isinstance(other, bool):
@@ -115,15 +107,7 @@ class Node(ABC):
         return And(self, other)
 
     def __rand__(self, other: Union["Node", bool]) -> "Node":
-        if isinstance(other, bool):
-            other = BoolConst(other)
-        if self.is_false() or other.is_false():
-            return BoolConst(False)
-        if self.is_true():
-            return other
-        if other.is_true():
-            return self
-        return And(self, other)
+        return self.__and__(other)
 
     @abstractmethod
     def doVisit(self, visitor: "NodeVisitor[T]", *args, **kwargs) -> T:

@@ -1,13 +1,14 @@
 import logging
+import sys
 from dataclasses import dataclass
 from typing import Iterable, Optional, Tuple, Union
 
 import networkx as nx
-import z3
 
 from syma.constraint.constraint import Constraint
+from syma.constraint.helpers.evaluate import evaluate_formula
 from syma.constraint.node.node import (BoolConst, BoolVar, IntVar, Node,
-                                       NodeType, RealVar)
+                                       NodeType, Or, RealVar)
 
 VarNode = Union[BoolVar, IntVar, RealVar]
 
@@ -44,6 +45,8 @@ class SymbolicAutomaton(object):
         self._graph = nx.DiGraph()  # automaton structure
         self._initial_location = None
         self.logger = logging.getLogger(__name__)
+
+        self._is_complete = False
 
     def add_var(self, name, domain):
         self._alphabet.add_var(name, domain)
@@ -87,6 +90,8 @@ class SymbolicAutomaton(object):
         if guard.is_trivially_false():
             return
         self._graph.add_edge(src, dst, guard=guard.to_dnf())
+
+        self._is_complete = False
 
     def location(self, node: int) -> Location:
         data = self._graph.nodes[node]
@@ -141,17 +146,27 @@ class SymbolicAutomaton(object):
         Here, we essentially check if the disjunction of all outgoing transition guards
         from each state evaluates to `True`.
         """
+        if self._is_complete:
+            return self._is_complete
         for q in self.locations:
             out_guards = [
-                self.get_guard(q, q_).expr for q_ in self._graph.successors(q)
+                self.get_guard(q, q_).formula for q_ in self._graph.successors(q)
             ]
-            disjunction = z3.Or(*out_guards)
-            solver = z3.Solver()
-            solver.add(z3.ForAll(list(self._alphabet.get_z3_vars()), disjunction))
-            if solver.check() != z3.sat:
+            if len(out_guards) == 0:
+                self.logger.error(f"State {q} has 2 out going edges.")
+                sys.exit(1)
+            elif len(out_guards) == 1:
+                disjunction = Constraint(self._alphabet, out_guards[0])
+            else:
+                disjunction = Constraint(
+                    formula=Or(*out_guards), alphabet=self._alphabet
+                )
+            if not disjunction.is_trivially_true():
                 self.logger.warning(
                     f"Automaton is incomplete at location: {self.location(q)}"
                 )
-                return False
+                self._is_complete = False
+                return self._is_complete
 
-        return True
+        self._is_complete = True
+        return self._is_complete

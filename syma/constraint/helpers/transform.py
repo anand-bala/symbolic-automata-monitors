@@ -152,9 +152,11 @@ class ToDNF(NodeVisitor[Node]):
     def visitOr(self, node: Or) -> Node:
         # We don't have to do much.
         # Just apply the transform to the children, which should output them in DNF.
-        return reduce(
-            lambda x, y: x | y, [self.visit(child) for child in node.children]
-        )
+        expr = node.children[0]
+        for child in node.children[1:]:
+            expr = expr | child
+
+        return expr
 
     def _distributeAnd(self, a: Node, b: Node) -> Node:
         """Given two DNF formulas, convert `a & b` to DNF."""

@@ -1,3 +1,5 @@
+from typing import Iterable
+
 import z3
 
 from syma.constraint.node import (EQ, GEQ, GT, LEQ, LT, NEQ, And, BoolConst,
@@ -75,3 +77,19 @@ class Formula2SMT(NodeVisitor[z3.ExprRef]):
 
 def to_smt(formula: Node) -> z3.ExprRef:
     return Formula2SMT(formula).translate()
+
+
+def check_trivially_false(formula: z3.ExprRef) -> bool:
+    solver = z3.Solver()
+    solver.add(formula)
+    result = solver.check()
+
+    return result == z3.unsat
+
+
+def check_trivially_true(vars: Iterable[z3.ExprRef], expr: z3.ExprRef) -> bool:
+    solver = z3.Solver()
+    solver.add(z3.ForAll(list(vars), expr))
+    result = solver.check()
+
+    return result == z3.sat
