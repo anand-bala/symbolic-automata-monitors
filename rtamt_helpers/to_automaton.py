@@ -48,7 +48,7 @@ def print_automaton_gen_code(spec: STLSpecification, *, use_ltlf=False):
     ltl_formula, predicate_map = to_ltl_string(spec)
 
     print(f"# STL Formula is: {spec.spec}")
-    # print(f"# LTL Formula is:\n\t{ltl_formula}")
+    print(f"# LTL Formula is:\n#\t{ltl_formula}")
     #
     # Convert the rtamt predicates to syma Constraints
     constraint_map = {
