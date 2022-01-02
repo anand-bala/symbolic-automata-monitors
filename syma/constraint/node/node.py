@@ -142,6 +142,9 @@ class BoolConst(Node):
     def node_type(self) -> NodeType:
         return NodeType.BoolConst
 
+    def __invert__(self) -> Node:
+        return BoolConst(not self.value)
+
     def doVisit(self, visitor: "NodeVisitor[T]", *args, **kwargs) -> T:
         return visitor.visitBoolConst(self, *args, **kwargs)
 
@@ -168,6 +171,9 @@ class IntConst(Node):
     def node_type(self) -> NodeType:
         return NodeType.NumConst
 
+    def __invert__(self):
+        raise TypeError("Logical negation cannot be applied to IntConst")
+
     def __str__(self) -> str:
         return str(self.value)
 
@@ -190,6 +196,9 @@ class RealConst(Node):
     @property
     def node_type(self) -> NodeType:
         return NodeType.NumConst
+
+    def __invert__(self):
+        raise TypeError("Logical negation cannot be applied to RealConst")
 
     def __str__(self) -> str:
         return str(self.value)
@@ -250,6 +259,9 @@ class IntVar(Node):
     def node_type(self) -> NodeType:
         return NodeType.NumVar
 
+    def __invert__(self):
+        raise TypeError("Logical negation cannot be applied to IntVar")
+
     def __str__(self) -> str:
         return str(self.name)
 
@@ -273,6 +285,9 @@ class RealVar(Node):
     def node_type(self) -> NodeType:
         return NodeType.NumVar
 
+    def __invert__(self):
+        raise TypeError("Logical negation cannot be applied to RealVar")
+
     def __str__(self) -> str:
         return str(self.name)
 
@@ -292,6 +307,9 @@ class LEQ(Node):
     @property
     def node_type(self) -> NodeType:
         return NodeType.Comparison
+
+    def __invert__(self) -> Node:
+        return GT(self.children[0], self.children[1])
 
     def __str__(self):
         return f"({str(self.children[0])} <= {str(self.children[1])})"
@@ -316,6 +334,9 @@ class LT(Node):
     def node_type(self) -> NodeType:
         return NodeType.Comparison
 
+    def __invert__(self) -> Node:
+        return GEQ(self.children[0], self.children[1])
+
     def __str__(self):
         return f"({str(self.children[0])} < {str(self.children[1])})"
 
@@ -338,6 +359,9 @@ class GEQ(Node):
     @property
     def node_type(self) -> NodeType:
         return NodeType.Comparison
+
+    def __invert__(self) -> Node:
+        return LT(self.children[0], self.children[1])
 
     def __str__(self):
         return f"({str(self.children[0])} >= {str(self.children[1])})"
@@ -362,6 +386,9 @@ class GT(Node):
     def node_type(self) -> NodeType:
         return NodeType.Comparison
 
+    def __invert__(self) -> Node:
+        return LEQ(self.children[0], self.children[1])
+
     def __str__(self):
         return f"({str(self.children[0])} > {str(self.children[1])})"
 
@@ -385,6 +412,9 @@ class EQ(Node):
     def node_type(self) -> NodeType:
         return NodeType.Comparison
 
+    def __invert__(self) -> Node:
+        return NEQ(self.children[0], self.children[1])
+
     def __str__(self):
         return f"({str(self.children[0])} == {str(self.children[1])})"
 
@@ -407,6 +437,9 @@ class NEQ(Node):
     @property
     def node_type(self) -> NodeType:
         return NodeType.Comparison
+
+    def __invert__(self) -> Node:
+        return EQ(self.children[0], self.children[1])
 
     def __str__(self):
         return f"({str(self.children[0])} != {str(self.children[1])})"
