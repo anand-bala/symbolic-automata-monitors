@@ -38,33 +38,33 @@ class ToNNF(NodeVisitor[Node]):
 
     def visitEQ(self, node: EQ, *, negate: bool) -> Node:
         if negate:
-            return NEQ(node.children[0], node.children[1])
-        return node
+            return NEQ(node.children[0], node.children[1]).make_canonical()
+        return node.make_canonical()
 
     def visitNEQ(self, node: NEQ, *, negate: bool) -> Node:
         if negate:
-            return EQ(node.children[0], node.children[1])
-        return node
+            return EQ(node.children[0], node.children[1]).make_canonical()
+        return node.make_canonical()
 
     def visitGEQ(self, node: GEQ, *, negate: bool) -> Node:
         if negate:
-            return LT(node.children[0], node.children[1])
-        return node
+            return LT(node.children[0], node.children[1]).make_canonical()
+        return node.make_canonical()
 
     def visitGT(self, node: GT, *, negate: bool) -> Node:
         if negate:
-            return LEQ(node.children[0], node.children[1])
-        return node
+            return LEQ(node.children[0], node.children[1]).make_canonical()
+        return node.make_canonical()
 
     def visitLEQ(self, node: LEQ, *, negate: bool) -> Node:
         if negate:
-            return GT(node.children[0], node.children[1])
-        return node
+            return GT(node.children[0], node.children[1]).make_canonical()
+        return node.make_canonical()
 
     def visitLT(self, node: LT, *, negate: bool) -> Node:
         if negate:
-            return GEQ(node.children[0], node.children[1])
-        return node
+            return GEQ(node.children[0], node.children[1]).make_canonical()
+        return node.make_canonical()
 
     def visitAnd(self, node: And, *, negate: bool) -> Node:
         if not negate:
@@ -188,3 +188,97 @@ class ToDNF(NodeVisitor[Node]):
 
 def to_dnf(formula: Node) -> Node:
     return ToDNF(formula).translate()
+
+
+class ToCNF(NodeVisitor[Node]):
+    """Convert a given formula to CNF"""
+
+    def __init__(self, formula: Node):
+        self.formula = formula
+
+    def translate(self) -> Node:
+        # First translate to NNF
+        self.formula = to_nnf(self.formula)
+        return self.visit(self.formula)
+
+    def visitIntConst(self, _: IntConst) -> Node:
+        raise RuntimeError("The NNF converter shouldn't visit IntConst")
+
+    def visitRealConst(self, _: RealConst) -> Node:
+        raise RuntimeError("The NNF converter shouldn't visit RealConst")
+
+    def visitIntVar(self, _: IntVar) -> Node:
+        raise RuntimeError("The NNF converter shouldn't visit IntVar")
+
+    def visitRealVar(self, _: RealVar) -> Node:
+        raise RuntimeError("The NNF converter shouldn't visit RealVar")
+
+    def visitBoolConst(self, node: BoolConst) -> Node:
+        return node
+
+    def visitBoolVar(self, node: BoolVar) -> Node:
+        return node
+
+    def visitEQ(self, node: EQ) -> Node:
+        return node
+
+    def visitNEQ(self, node: NEQ) -> Node:
+        return node
+
+    def visitGEQ(self, node: GEQ) -> Node:
+        return node
+
+    def visitGT(self, node: GT) -> Node:
+        return node
+
+    def visitLEQ(self, node: LEQ) -> Node:
+        return node
+
+    def visitLT(self, node: LT) -> Node:
+        return node
+
+    def visitNot(self, node: Not) -> Node:
+        # Assuming NNF, the Not should only be at the BoolVars.
+        return node
+
+    def visitAnd(self, node: And) -> Node:
+        # We don't have to do much.
+        # Just apply the transform to the children, which should output them in CNF.
+        expr = node.children[0]
+        for child in node.children[1:]:
+            expr = expr | child
+
+        return expr
+
+    def _distributeOr(self, a: Node, b: Node) -> Node:
+        """Given two CNF formulas, convert `a | b` to CNF."""
+        if (a.node_type != NodeType.And) and (b.node_type != NodeType.And):
+            # Since a and b are CNF, if they are not And, they must be atomic or Or.
+            # Else one of them is a compound expression
+            #
+            # Thus, this is a NOP.
+            return a | b
+        elif a.node_type != NodeType.And:
+            # Make sure `a` is an And expression.
+            a, b = b, a
+
+        # Let `a = (p & q)`
+        # Recursively distribute as `(p & q) | b = (p | b) & (q | b)`
+        # Since `p`, `q`, and `b` are CNF, the precondition for _distributeOr
+        # recursively applies.
+        distributed_ops = [self._distributeOr(p, b) for p in a.children]
+        # Post condition: List[And]
+        return reduce(lambda x, y: x & y, distributed_ops)
+
+    def visitOr(self, node: Or) -> Node:
+
+        # We need to distribute the ORs over the ANDs.
+        # First, apply the transform to the children.
+        children = [self.visit(child) for child in node.children]
+
+        # Now, we do a pairwise distribution of each Or into any And sub-expression.
+        return reduce(self._distributeOr, children)
+
+
+def to_cnf(formula: Node) -> Node:
+    return ToCNF(formula).translate()

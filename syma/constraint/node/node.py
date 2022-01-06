@@ -5,6 +5,9 @@ from typing import TYPE_CHECKING, List, TypeVar, Union
 if TYPE_CHECKING:
     from syma.constraint.node.visitor import NodeVisitor
 
+    ComparisonNode = Union["EQ", "GEQ", "GT", "LEQ", "LT", "NEQ"]
+
+
 T = TypeVar("T")
 
 
@@ -251,6 +254,12 @@ class IntVar(Node):
         super().__init__()
         self._name = name
 
+    def is_int(self) -> bool:
+        return True
+
+    def is_real(self) -> bool:
+        return True
+
     @property
     def name(self) -> str:
         return self._name
@@ -277,6 +286,12 @@ class RealVar(Node):
         super().__init__()
         self._name = name
 
+    def is_int(self) -> bool:
+        return False
+
+    def is_real(self) -> bool:
+        return True
+
     @property
     def name(self) -> str:
         return self._name
@@ -298,11 +313,25 @@ class RealVar(Node):
         return visitor.visitRealVar(self, *args, **kwargs)
 
 
+@unique
+class ComparisonOp(Enum):
+    LEQ = auto()
+    LT = auto()
+    GEQ = auto()
+    GT = auto()
+    EQ = auto()
+    NEQ = auto()
+
+
 class LEQ(Node):
     def __init__(self, op1: Node, op2: Node):
         Node.__init__(self)
         self.children.append(op1)
         self.children.append(op2)
+
+    @property
+    def op_type(self) -> ComparisonOp:
+        return ComparisonOp.LEQ
 
     @property
     def node_type(self) -> NodeType:
@@ -323,12 +352,30 @@ class LEQ(Node):
     def is_nnf(self) -> bool:
         return True
 
+    def make_canonical(self) -> "ComparisonNode":
+        """Return an expression of the form `var ~ c`"""
+        lhs, rhs = self.children[0], self.children[1]
+        if lhs.node_type == NodeType.NumVar and rhs.node_type == NodeType.NumConst:
+            # We have an expr of the form `x <= c`
+            # Return as is
+            return self
+        if lhs.node_type == NodeType.NumConst and rhs.node_type == NodeType.NumVar:
+            # We have an expr of the form `c <= x`
+            # Return `x >= c`
+            return rhs >= lhs
+
+        raise ValueError(f"Cannot canonicalize an expression of the form {repr(self)}")
+
 
 class LT(Node):
     def __init__(self, op1: Node, op2: Node):
         Node.__init__(self)
         self.children.append(op1)
         self.children.append(op2)
+
+    @property
+    def op_type(self) -> ComparisonOp:
+        return ComparisonOp.LT
 
     @property
     def node_type(self) -> NodeType:
@@ -349,12 +396,30 @@ class LT(Node):
     def is_nnf(self) -> bool:
         return True
 
+    def make_canonical(self) -> "ComparisonNode":
+        """Return an expression of the form `var ~ c`"""
+        lhs, rhs = self.children[0], self.children[1]
+        if lhs.node_type == NodeType.NumVar and rhs.node_type == NodeType.NumConst:
+            # We have an expr of the form `x < c`
+            # Return as is
+            return self
+        if lhs.node_type == NodeType.NumConst and rhs.node_type == NodeType.NumVar:
+            # We have an expr of the form `c < x`
+            # Return `x > c`
+            return rhs > lhs
+
+        raise ValueError(f"Cannot canonicalize an expression of the form {repr(self)}")
+
 
 class GEQ(Node):
     def __init__(self, op1: Node, op2: Node):
         Node.__init__(self)
         self.children.append(op1)
         self.children.append(op2)
+
+    @property
+    def op_type(self) -> ComparisonOp:
+        return ComparisonOp.GEQ
 
     @property
     def node_type(self) -> NodeType:
@@ -375,12 +440,30 @@ class GEQ(Node):
     def is_nnf(self) -> bool:
         return True
 
+    def make_canonical(self) -> "ComparisonNode":
+        """Return an expression of the form `var ~ c`"""
+        lhs, rhs = self.children[0], self.children[1]
+        if lhs.node_type == NodeType.NumVar and rhs.node_type == NodeType.NumConst:
+            # We have an expr of the form `x >= c`
+            # Return as is
+            return self
+        if lhs.node_type == NodeType.NumConst and rhs.node_type == NodeType.NumVar:
+            # We have an expr of the form `c >= x`
+            # Return `x <= c`
+            return rhs <= lhs
+
+        raise ValueError(f"Cannot canonicalize an expression of the form {repr(self)}")
+
 
 class GT(Node):
     def __init__(self, op1: Node, op2: Node):
         Node.__init__(self)
         self.children.append(op1)
         self.children.append(op2)
+
+    @property
+    def op_type(self) -> ComparisonOp:
+        return ComparisonOp.GT
 
     @property
     def node_type(self) -> NodeType:
@@ -401,12 +484,30 @@ class GT(Node):
     def is_nnf(self) -> bool:
         return True
 
+    def make_canonical(self) -> "ComparisonNode":
+        """Return an expression of the form `var ~ c`"""
+        lhs, rhs = self.children[0], self.children[1]
+        if lhs.node_type == NodeType.NumVar and rhs.node_type == NodeType.NumConst:
+            # We have an expr of the form `x > c`
+            # Return as is
+            return self
+        if lhs.node_type == NodeType.NumConst and rhs.node_type == NodeType.NumVar:
+            # We have an expr of the form `c > x`
+            # Return `x < c`
+            return rhs < lhs
+
+        raise ValueError(f"Cannot canonicalize an expression of the form {repr(self)}")
+
 
 class EQ(Node):
     def __init__(self, op1: Node, op2: Node):
         Node.__init__(self)
         self.children.append(op1)
         self.children.append(op2)
+
+    @property
+    def op_type(self) -> ComparisonOp:
+        return ComparisonOp.EQ
 
     @property
     def node_type(self) -> NodeType:
@@ -427,12 +528,31 @@ class EQ(Node):
     def is_nnf(self) -> bool:
         return True
 
+    def make_canonical(self) -> "Node":
+        """Convert an expression of the form `x == c` to `(x >= c) & (x <= c)`"""
+        lhs, rhs = self.children[0], self.children[1]
+        if lhs.node_type == NodeType.NumVar and rhs.node_type == NodeType.NumConst:
+            # We have an expr of the form `x == c`
+            x, c = lhs, rhs
+        elif lhs.node_type == NodeType.NumConst and rhs.node_type == NodeType.NumVar:
+            # We have an expr of the form `c == x`
+            x, c = rhs, lhs
+        else:
+            raise ValueError(
+                f"Cannot canonicalize an expression of the form {repr(self)}"
+            )
+        return (x >= c) & (x <= c)
+
 
 class NEQ(Node):
     def __init__(self, op1: Node, op2: Node):
         Node.__init__(self)
         self.children.append(op1)
         self.children.append(op2)
+
+    @property
+    def op_type(self) -> ComparisonOp:
+        return ComparisonOp.NEQ
 
     @property
     def node_type(self) -> NodeType:
@@ -452,6 +572,21 @@ class NEQ(Node):
 
     def is_nnf(self) -> bool:
         return True
+
+    def make_canonical(self) -> "Node":
+        """Convert an expression of the form `x != c` to `(x > c) | (x < c)`"""
+        lhs, rhs = self.children[0], self.children[1]
+        if lhs.node_type == NodeType.NumVar and rhs.node_type == NodeType.NumConst:
+            # We have an expr of the form `x != c`
+            x, c = lhs, rhs
+        elif lhs.node_type == NodeType.NumConst and rhs.node_type == NodeType.NumVar:
+            # We have an expr of the form `c != x`
+            x, c = rhs, lhs
+        else:
+            raise ValueError(
+                f"Cannot canonicalize an expression of the form {repr(self)}"
+            )
+        return (x > c) | (x < c)
 
 
 class Not(Node):

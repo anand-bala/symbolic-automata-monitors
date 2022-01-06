@@ -6,9 +6,8 @@ from typing import Iterable, Optional, Tuple, Union
 import networkx as nx
 
 from syma.constraint.constraint import Constraint
-from syma.constraint.helpers.evaluate import evaluate_formula
-from syma.constraint.node.node import (BoolConst, BoolVar, IntVar, Node,
-                                       NodeType, Or, RealVar)
+from syma.constraint.node.node import (BoolConst, BoolVar, IntVar, Node, Or,
+                                       RealVar)
 
 VarNode = Union[BoolVar, IntVar, RealVar]
 
@@ -18,6 +17,7 @@ class Location(object):
     id: int
     initial: bool = False
     accepting: bool = False
+    rejecting: bool = False
 
 
 @dataclass
@@ -43,7 +43,7 @@ class SymbolicAutomaton(object):
 
         self._alphabet = Alphabet()  # alphabet (effective Boolean algebra)
         self._graph = nx.DiGraph()  # automaton structure
-        self._initial_location = None
+        self._initial_location: Optional[int] = None
         self.logger = logging.getLogger(__name__)
 
         self._is_complete = False
@@ -124,14 +124,6 @@ class SymbolicAutomaton(object):
             raise ValueError("No initial location assigned in the automaton")
         return self._initial_location
 
-    @property
-    def accepting(self) -> Iterable[int]:
-        node: int
-        acc: bool
-        for node, acc in self._graph.nodes(data="accepting"):  # type: ignore
-            if acc:
-                yield node
-
     def in_edges(self, q: int) -> Iterable[Tuple[int, int]]:
         for q_ in self._graph.predecessors(q):
             yield q_, q
@@ -170,3 +162,60 @@ class SymbolicAutomaton(object):
 
         self._is_complete = True
         return self._is_complete
+
+    def is_accepting(self, loc: int) -> bool:
+        info = self.location(loc)
+        return info.accepting
+
+    def accepting(self) -> Iterable[int]:
+        node: int
+        acc: bool
+        for node, acc in self._graph.nodes(data="accepting"):  # type: ignore
+            if acc:
+                yield node
+
+    def has_unique_accepting_sink(self) -> bool:
+        """Check if the automaton has a unique accepting sink"""
+        return len(set(self.accepting())) == 1
+
+    def accepting_sink(self) -> int:
+        accepting_states = set(self.accepting())
+        if len(accepting_states) == 0:
+            raise ValueError("Given automaton does not have any accepting state")
+        if len(accepting_states) > 1:
+            raise ValueError("Given automaton does not have a unique accepting sink")
+        return accepting_states.pop()
+
+    def is_rejecting_sink(self, loc: int) -> bool:
+        """Check if location has unique outgoing transition, which is a self loop, and location is not accepting"""
+        successors = set(self._graph.successors(loc))
+        if len(successors) == 0:
+            raise ValueError("Can't find rejecting sink for incomplete automaton")
+        if len(successors) > 1:
+            return False
+        succ = successors.pop()
+        if succ != loc:
+            return False
+
+        guard = self.get_guard(loc, succ)
+        if guard.is_trivially_true():
+            return True
+        else:
+            raise ValueError(f"Looks like automaton is incomplete at location {loc}")
+
+    def rejecting(self) -> Iterable[int]:
+        for node in self.locations:
+            if self.is_rejecting_sink(node):
+                yield node
+
+    def has_unique_rejecting_sink(self) -> bool:
+        """Check if the automaton has a unique rejecting sink"""
+        return len(set(self.rejecting())) == 1
+
+    def rejecting_sink(self) -> Optional[int]:
+        rejecting_states = set(self.rejecting())
+        if len(rejecting_states) == 0:
+            return None
+        if len(rejecting_states) > 1:
+            return None
+        return rejecting_states.pop()

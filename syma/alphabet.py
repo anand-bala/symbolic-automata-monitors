@@ -25,6 +25,14 @@ class Alphabet(object):
         self.vars: dict[str, VarNode] = dict()  # Map of variable names to variable node
         self.domains: dict[str, Optional[Tuple]] = dict()  # Domain Map
 
+    def __eq__(self, other: "Alphabet") -> bool:
+        if set(self.vars.keys()) != set(other.vars.keys()):
+            return False
+        if self.domains != other.domains:
+            return False
+
+        return True
+
     def declare_bool(self, name: str) -> BoolVar:
         var = BoolVar(name)
         self.add_var(var, None)
