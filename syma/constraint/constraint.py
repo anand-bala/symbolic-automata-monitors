@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Mapping, Optional, Union
 import z3
 
 from syma.constraint.helpers.evaluate import evaluate_formula
-from syma.constraint.helpers.minimization import minimize_and
+from syma.constraint.helpers.minimization import minimize_formula
 from syma.constraint.helpers.smt import (check_trivially_false,
                                          check_trivially_true, to_smt)
 from syma.constraint.helpers.transform import to_dnf, to_nnf
@@ -41,6 +41,10 @@ class Constraint(object):
             self._smt_formula = to_smt(self._formula)
         return self._smt_formula
 
+    def is_sat(self) -> bool:
+        """Check if the formula is satisfiable"""
+        return not self.is_trivially_false()
+
     def is_trivially_false(self) -> bool:
         """Check if the formula is trivially false"""
         if self.formula.node_type == NodeType.BoolConst:
@@ -70,7 +74,7 @@ class Constraint(object):
 
     def minimize(self) -> "Constraint":
         dnf = self.to_dnf()
-        minim = minimize_and(self.alphabet, dnf.formula)
+        minim = minimize_formula(self.alphabet, dnf.formula)
         return Constraint(self.alphabet, minim)
 
     def __repr__(self):

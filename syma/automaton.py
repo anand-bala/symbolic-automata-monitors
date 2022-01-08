@@ -104,6 +104,9 @@ class SymbolicAutomaton(object):
         data = self._graph.edges[src, dst]
         return Transition(src=src, dst=dst, guard=data["guard"])
 
+    def has_transition(self, src: int, dst: int) -> bool:
+        return (src, dst) in self._graph.edges
+
     def get_guard(self, src: int, dst: int) -> Constraint:
         return self.transition(src, dst).guard
 
@@ -117,6 +120,10 @@ class SymbolicAutomaton(object):
     @property
     def locations(self) -> Iterable[int]:
         return self._graph.nodes
+
+    @property
+    def transitions(self) -> Iterable[Tuple[int, int]]:
+        return self._graph.edges
 
     @property
     def initial(self) -> int:
@@ -188,6 +195,8 @@ class SymbolicAutomaton(object):
 
     def is_rejecting_sink(self, loc: int) -> bool:
         """Check if location has unique outgoing transition, which is a self loop, and location is not accepting"""
+        if self.is_accepting(loc):
+            return False
         successors = set(self._graph.successors(loc))
         if len(successors) == 0:
             raise ValueError("Can't find rejecting sink for incomplete automaton")

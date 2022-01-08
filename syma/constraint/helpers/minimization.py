@@ -7,11 +7,11 @@ from syma.constraint.helpers.smt import to_smt
 from syma.constraint.node import BoolConst, Node, NodeType, Or
 
 
-def _reduce_conjunction(alphabet: Alphabet, formula: Node) -> Node:
-    if formula.node_type != NodeType.And:
+def _reduce(alphabet: Alphabet, formula: Node) -> Node:
+    if formula.node_type not in (NodeType.And, NodeType.Or):
         return formula
-    assert formula.node_type == NodeType.And
 
+    node_type = formula.node_type
     alph_list = list(alphabet.get_z3_vars())
 
     predicates = formula.children
@@ -38,17 +38,23 @@ def _reduce_conjunction(alphabet: Alphabet, formula: Node) -> Node:
         len(predicates) >= 1
     ), "At least one predicate must be there after minimization"
 
-    expr: Node = BoolConst(True)
-    for p in predicates:
-        expr = expr & p
-    return expr
+    if node_type == NodeType.And:
+        expr: Node = BoolConst(True)
+        for p in predicates:
+            expr &= p
+        return expr
+    else:  # node_type == NodeType.Or:
+        expr: Node = BoolConst(False)
+        for p in predicates:
+            expr |= p
+        return expr
 
 
-def minimize_and(alphabet: Alphabet, formula: Node) -> Node:
+def minimize_formula(alphabet: Alphabet, formula: Node) -> Node:
     """Minimize the number of And in a DNF formula"""
     if formula.node_type == NodeType.Or:
-        reduced = [_reduce_conjunction(alphabet, expr) for expr in formula.children]
-        return Or(*reduced)
+        reduced = [_reduce(alphabet, expr) for expr in formula.children]
+        return _reduce(alphabet, Or(*reduced))
     elif formula.node_type == NodeType.And:
-        return _reduce_conjunction(alphabet, formula)
+        return _reduce(alphabet, formula)
     return formula
