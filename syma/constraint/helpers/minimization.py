@@ -1,13 +1,16 @@
 from itertools import product
+from typing import TYPE_CHECKING
 
 import z3
 
-from syma.alphabet import Alphabet
 from syma.constraint.helpers.smt import to_smt
 from syma.constraint.node import BoolConst, Node, NodeType, Or
 
+if TYPE_CHECKING:
+    from syma.alphabet import Alphabet
 
-def _reduce(alphabet: Alphabet, formula: Node) -> Node:
+
+def _reduce(alphabet: "Alphabet", formula: Node) -> Node:
     if formula.node_type not in (NodeType.And, NodeType.Or):
         return formula
 
@@ -50,7 +53,7 @@ def _reduce(alphabet: Alphabet, formula: Node) -> Node:
         return expr
 
 
-def minimize_formula(alphabet: Alphabet, formula: Node) -> Node:
+def minimize_formula(alphabet: "Alphabet", formula: Node) -> Node:
     """Minimize the number of And in a DNF formula"""
     if formula.node_type == NodeType.Or:
         reduced = [_reduce(alphabet, expr) for expr in formula.children]

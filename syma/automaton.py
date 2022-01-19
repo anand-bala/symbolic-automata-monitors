@@ -5,6 +5,7 @@ from typing import Iterable, Optional, Tuple, Union
 
 import networkx as nx
 
+from syma.alphabet import Interval
 from syma.constraint.constraint import Constraint
 from syma.constraint.node.node import (BoolConst, BoolVar, IntVar, Node, Or,
                                        RealVar)
@@ -48,12 +49,14 @@ class SymbolicAutomaton(object):
 
         self._is_complete = False
 
-    def add_var(self, name, domain):
+    def add_var(self, name: VarNode, domain: Optional[Union[Interval, Tuple]] = None):
+        if domain is not None and isinstance(domain, tuple):
+            domain = Interval(*domain)
         self._alphabet.add_var(name, domain)
 
-    def declare_bool(self, name: str, domain: Optional[Tuple] = None) -> BoolVar:
+    def declare_bool(self, name: str) -> BoolVar:
         var = BoolVar(name)
-        self.add_var(var, domain)
+        self.add_var(var)
         return var
 
     def declare_int(self, name: str, domain: Optional[Tuple] = None) -> IntVar:
