@@ -1,6 +1,5 @@
 from typing import Dict
 
-import rtamt
 import spot
 import z3
 from rtamt import STLSpecification

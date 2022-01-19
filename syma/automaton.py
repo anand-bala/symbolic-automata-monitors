@@ -92,7 +92,7 @@ class SymbolicAutomaton(object):
 
         if guard.is_trivially_false():
             return
-        self._graph.add_edge(src, dst, guard=guard.to_dnf())
+        self._graph.add_edge(src, dst, guard=guard.minimize())
 
         self._is_complete = False
 
