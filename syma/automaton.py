@@ -142,6 +142,34 @@ class SymbolicAutomaton(object):
         for q_ in self._graph.successors(q):
             yield q, q_
 
+    def _is_state_complete(self, q: int) -> bool:
+        """Check if the given state is complete"""
+        out_guards = [self.get_guard(q, q_).formula for q_ in self._graph.successors(q)]
+        if len(out_guards) == 0:
+            self.logger.error(f"State {q} has 2 out going edges.")
+            sys.exit(1)
+        elif len(out_guards) == 1:
+            disjunction = Constraint(self._alphabet, out_guards[0])
+        else:
+            disjunction = Constraint(formula=Or(*out_guards), alphabet=self._alphabet)
+        return disjunction.is_trivially_true()
+
+    def _check_complete(self) -> bool:
+        """Checks if the automaton is complete without early exit.
+
+        Here, we essentially check if the disjunction of all outgoing transition guards
+        from each state evaluates to `True`.
+        """
+        is_complete = True
+        for q in self.locations:
+            if not self._is_state_complete(q):
+                self.logger.warning(
+                    f"Automaton is incomplete at location: {self.location(q)}"
+                )
+                is_complete = False
+
+        return is_complete
+
     def is_complete(self) -> bool:
         """Checks if the automaton is complete.
 
@@ -151,22 +179,7 @@ class SymbolicAutomaton(object):
         if self._is_complete:
             return self._is_complete
         for q in self.locations:
-            out_guards = [
-                self.get_guard(q, q_).formula for q_ in self._graph.successors(q)
-            ]
-            if len(out_guards) == 0:
-                self.logger.error(f"State {q} has 2 out going edges.")
-                sys.exit(1)
-            elif len(out_guards) == 1:
-                disjunction = Constraint(self._alphabet, out_guards[0])
-            else:
-                disjunction = Constraint(
-                    formula=Or(*out_guards), alphabet=self._alphabet
-                )
-            if not disjunction.is_trivially_true():
-                self.logger.warning(
-                    f"Automaton is incomplete at location: {self.location(q)}"
-                )
+            if not self._is_state_complete(q):
                 self._is_complete = False
                 return self._is_complete
 

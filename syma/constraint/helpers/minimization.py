@@ -11,15 +11,16 @@ if TYPE_CHECKING:
 
 
 def _reduce(alphabet: "Alphabet", formula: Node) -> Node:
-    if formula.node_type not in (NodeType.And, NodeType.Or):
+    if formula.node_type != NodeType.And:
         return formula
 
-    node_type = formula.node_type
     alph_list = list(alphabet.get_z3_vars())
 
     predicates = formula.children
     # Get the list of predicate indices in the conjunction
     predicate_set = set(range(len(formula.children)))
+    # Cache the z3 exprs for each child
+    z3_predicates = [to_smt(e) for e in predicates]
 
     for i, j in product(predicate_set, repeat=2):
         # Make sure both, i and j are in the predicate_set
@@ -27,8 +28,8 @@ def _reduce(alphabet: "Alphabet", formula: Node) -> Node:
             continue
         if i == j:
             continue
-        p = to_smt(predicates[i])
-        q = to_smt(predicates[j])
+        p = z3_predicates[i]
+        q = z3_predicates[j]
         # Check if p -> q is Sat for all input alphabet
         solver = z3.Solver()
         solver.add(z3.ForAll(alph_list, z3.Implies(p, q)))
@@ -41,23 +42,17 @@ def _reduce(alphabet: "Alphabet", formula: Node) -> Node:
         len(predicates) >= 1
     ), "At least one predicate must be there after minimization"
 
-    if node_type == NodeType.And:
-        expr: Node = BoolConst(True)
-        for p in predicates:
-            expr &= p
-        return expr
-    else:  # node_type == NodeType.Or:
-        expr: Node = BoolConst(False)
-        for p in predicates:
-            expr |= p
-        return expr
+    expr: Node = BoolConst(True)
+    for p in predicates:
+        expr &= p
+    return expr
 
 
 def minimize_formula(alphabet: "Alphabet", formula: Node) -> Node:
     """Minimize the number of And in a DNF formula"""
     if formula.node_type == NodeType.Or:
         reduced = [_reduce(alphabet, expr) for expr in formula.children]
-        return _reduce(alphabet, Or(*reduced))
+        return Or(*reduced)
     elif formula.node_type == NodeType.And:
         return _reduce(alphabet, formula)
     return formula
