@@ -599,7 +599,7 @@ class Not(Node):
         return NodeType.Not
 
     def __str__(self):
-        return f"not {str(self.children[0])}"
+        return f"~{str(self.children[0])}"
 
     def __repr__(self):
         return f"Not({str(self.children[0])})"
