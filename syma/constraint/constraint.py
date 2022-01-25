@@ -27,6 +27,9 @@ class Constraint(object):
         self._formula = formula
         self._smt_formula: Optional[z3.ExprRef] = None
 
+        self._is_trivially_false: Optional[bool] = None
+        self._is_trivially_true: Optional[bool] = None
+
     @property
     def formula(self) -> Node:
         return self._formula
@@ -49,19 +52,24 @@ class Constraint(object):
         """Check if the formula is trivially false"""
         if self.formula.node_type == NodeType.BoolConst:
             return self.formula.value is False  # type: ignore
-        check = check_trivially_false(self.expr)
-        if check:
+        if self._is_trivially_false is not None:
+            return self._is_trivially_false
+        self._is_trivially_false = check_trivially_false(self.expr)
+        if self._is_trivially_false:
             self._formula = BoolConst(False)
-        return check
+
+        return self._is_trivially_false
 
     def is_trivially_true(self) -> bool:
         """Check if the formula is trivially true"""
         if self.formula.node_type == NodeType.BoolConst:
             return self.formula.value  # type: ignore
-        check = check_trivially_true(self.alphabet.get_z3_vars(), self.expr)
-        if check:
+        if self._is_trivially_true is not None:
+            return self._is_trivially_true
+        self._is_trivially_true = check_trivially_true(self.alphabet.get_z3_vars(), self.expr)
+        if self._is_trivially_true:
             self._formula = BoolConst(True)
-        return check
+        return self._is_trivially_true
 
     def check_sat(self, values: Mapping[str, Value]) -> bool:
         return evaluate_formula(self.formula, values)
