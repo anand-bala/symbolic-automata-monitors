@@ -1,8 +1,25 @@
 from functools import reduce
 
-from syma.constraint.node import (EQ, GEQ, GT, LEQ, LT, NEQ, And, BoolConst,
-                                  BoolVar, IntConst, IntVar, Node, NodeType,
-                                  NodeVisitor, Not, Or, RealConst, RealVar)
+from syma.constraint.node import (
+    EQ,
+    GEQ,
+    GT,
+    LEQ,
+    LT,
+    NEQ,
+    And,
+    BoolConst,
+    BoolVar,
+    IntConst,
+    IntVar,
+    Node,
+    NodeType,
+    NodeVisitor,
+    Not,
+    Or,
+    RealConst,
+    RealVar,
+)
 
 
 class ToNNF(NodeVisitor[Node]):

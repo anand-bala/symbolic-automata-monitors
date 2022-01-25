@@ -1,7 +1,23 @@
 from abc import ABC, abstractmethod
 
-from .node import (EQ, GEQ, GT, LEQ, LT, NEQ, And, BoolConst, BoolVar,
-                   IntConst, IntVar, Node, Not, Or, RealConst, RealVar)
+from .node import (
+    EQ,
+    GEQ,
+    GT,
+    LEQ,
+    LT,
+    NEQ,
+    And,
+    BoolConst,
+    BoolVar,
+    IntConst,
+    IntVar,
+    Node,
+    Not,
+    Or,
+    RealConst,
+    RealVar,
+)
 
 NOT_IMPLEMENTED = "You should implement this."
 

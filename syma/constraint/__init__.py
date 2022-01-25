@@ -1,8 +1,25 @@
 from syma.constraint.constraint import Constraint
-from syma.constraint.node import (EQ, GEQ, GT, LEQ, LT, NEQ, And, BoolConst,
-                                  BoolVar, Constant, IntConst, IntVar, Node,
-                                  NodeType, NodeVisitor, Not, Or, RealConst,
-                                  RealVar)
+from syma.constraint.node import (
+    EQ,
+    GEQ,
+    GT,
+    LEQ,
+    LT,
+    NEQ,
+    And,
+    BoolConst,
+    BoolVar,
+    Constant,
+    IntConst,
+    IntVar,
+    Node,
+    NodeType,
+    NodeVisitor,
+    Not,
+    Or,
+    RealConst,
+    RealVar,
+)
 
 __all__ = [
     "And",

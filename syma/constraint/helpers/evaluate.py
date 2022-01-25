@@ -1,9 +1,25 @@
 from functools import reduce
 from typing import Mapping, Union
 
-from syma.constraint.node import (EQ, GEQ, GT, LEQ, LT, NEQ, And, BoolConst,
-                                  BoolVar, IntConst, IntVar, Node, NodeVisitor,
-                                  Not, Or, RealConst, RealVar)
+from syma.constraint.node import (
+    EQ,
+    GEQ,
+    GT,
+    LEQ,
+    LT,
+    NEQ,
+    And,
+    BoolConst,
+    BoolVar,
+    IntConst,
+    IntVar,
+    Node,
+    NodeVisitor,
+    Not,
+    Or,
+    RealConst,
+    RealVar,
+)
 
 
 class Evaluate(NodeVisitor[Union[bool, int, float]]):

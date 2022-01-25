@@ -7,8 +7,7 @@ import networkx as nx
 
 from syma.alphabet import Interval
 from syma.constraint.constraint import Constraint
-from syma.constraint.node.node import (BoolConst, BoolVar, IntVar, Node, Or,
-                                       RealVar)
+from syma.constraint.node.node import BoolConst, BoolVar, IntVar, Node, Or, RealVar
 
 VarNode = Union[BoolVar, IntVar, RealVar]
 

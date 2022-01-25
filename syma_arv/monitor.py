@@ -3,9 +3,25 @@ from typing import Callable, Generic, Mapping, TypeVar, Union
 
 from syma.automaton import SymbolicAutomaton
 from syma.constraint.constraint import Constraint
-from syma.constraint.node import (EQ, GEQ, GT, LEQ, LT, NEQ, And, BoolConst,
-                                  BoolVar, IntConst, IntVar, Node, NodeVisitor,
-                                  Not, Or, RealConst, RealVar)
+from syma.constraint.node import (
+    EQ,
+    GEQ,
+    GT,
+    LEQ,
+    LT,
+    NEQ,
+    And,
+    BoolConst,
+    BoolVar,
+    IntConst,
+    IntVar,
+    Node,
+    NodeVisitor,
+    Not,
+    Or,
+    RealConst,
+    RealVar,
+)
 from syma_arv.semiring import Semiring
 
 Value = Union[bool, int, float]

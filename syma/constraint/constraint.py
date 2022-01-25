@@ -4,11 +4,20 @@ import z3
 
 from syma.constraint.helpers.evaluate import evaluate_formula
 from syma.constraint.helpers.minimization import minimize_formula
-from syma.constraint.helpers.smt import (check_trivially_false,
-                                         check_trivially_true, to_smt)
+from syma.constraint.helpers.smt import (
+    check_trivially_false,
+    check_trivially_true,
+    to_smt,
+)
 from syma.constraint.helpers.transform import to_dnf, to_nnf
-from syma.constraint.node.node import (BoolConst, BoolVar, IntVar, Node,
-                                       NodeType, RealVar)
+from syma.constraint.node.node import (
+    BoolConst,
+    BoolVar,
+    IntVar,
+    Node,
+    NodeType,
+    RealVar,
+)
 
 if TYPE_CHECKING:
     from syma.alphabet import Alphabet
@@ -66,7 +75,9 @@ class Constraint(object):
             return self.formula.value  # type: ignore
         if self._is_trivially_true is not None:
             return self._is_trivially_true
-        self._is_trivially_true = check_trivially_true(self.alphabet.get_z3_vars(), self.expr)
+        self._is_trivially_true = check_trivially_true(
+            self.alphabet.get_z3_vars(), self.expr
+        )
         if self._is_trivially_true:
             self._formula = BoolConst(True)
         return self._is_trivially_true

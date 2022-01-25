@@ -2,9 +2,25 @@ from typing import Iterable
 
 import z3
 
-from syma.constraint.node import (EQ, GEQ, GT, LEQ, LT, NEQ, And, BoolConst,
-                                  BoolVar, IntConst, IntVar, Node, NodeVisitor,
-                                  Not, Or, RealConst, RealVar)
+from syma.constraint.node import (
+    EQ,
+    GEQ,
+    GT,
+    LEQ,
+    LT,
+    NEQ,
+    And,
+    BoolConst,
+    BoolVar,
+    IntConst,
+    IntVar,
+    Node,
+    NodeVisitor,
+    Not,
+    Or,
+    RealConst,
+    RealVar,
+)
 
 
 class Formula2SMT(NodeVisitor[z3.ExprRef]):
