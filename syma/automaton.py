@@ -80,7 +80,14 @@ class SymbolicAutomaton(object):
             self._initial_location = location
         self._graph.add_node(location, initial=initial, accepting=accepting)
 
-    def add_transition(self, src: int, dst: int, guard: Union[Constraint, Node, bool]):
+    def add_transition(
+        self,
+        src: int,
+        dst: int,
+        guard: Union[Constraint, Node, bool],
+        *,
+        minimize: bool = True,
+    ):
         if (src, dst) in self._graph.edges:
             raise ValueError(
                 f"Transition from {src} to {dst} already exists. Did you want to update the guard?"
@@ -92,7 +99,9 @@ class SymbolicAutomaton(object):
 
         if guard.is_trivially_false():
             return
-        self._graph.add_edge(src, dst, guard=guard.minimize())
+        if minimize:
+            guard = guard.minimize()
+        self._graph.add_edge(src, dst, guard=guard)
 
         self._is_complete = False
 
