@@ -161,9 +161,7 @@ class _ComputeHorizon(STLVisitor):
 
         length = element.end - element.begin
         assert isinstance(length, int)
-        return max([
-            lhs + element.end -1,
-            rhs + element.end])
+        return max([lhs + element.end - 1, rhs + element.end])
 
     def visitDefault(self, _, args):
         return 0
