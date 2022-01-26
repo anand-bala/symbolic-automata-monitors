@@ -158,14 +158,14 @@ class _FastRobustness(STLVisitor):
         rob = np.full(self.trace_len, np.inf)
         for child in element.children:
             child_rob = self.visit(child)
-            rob = np.minimum(child_rob, rob)
+            rob = np.minimum(child_rob, rob[:len(child_rob)])
         return rob
 
     def visitOr(self, element: Disjunction, args) -> npt.NDArray[np.float_]:
         rob = np.full(self.trace_len, -np.inf)
         for child in element.children:
             child_rob = self.visit(child)
-            rob = np.maximum(child_rob, rob)
+            rob = np.minimum(child_rob, rob[:len(child_rob)])
         return rob
 
     def visitImplies(self, element: Implies, args) -> npt.NDArray[np.float_]:
