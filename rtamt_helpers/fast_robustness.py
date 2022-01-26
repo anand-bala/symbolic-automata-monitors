@@ -256,7 +256,8 @@ class _FastRobustness(STLVisitor):
     def visitTimedAlways(self, element: TimedAlways, args) -> npt.NDArray[np.float_]:
         child = self.visit(element.children[0])
         start, end = element.begin, element.end
-        _, rob = np.asarray(supermaxmin(child[start:], end - start))
+        width = min(self.trace_len, end - start)
+        _, rob = np.asarray(supermaxmin(child[start:], width))
         return rob
 
     def visitTimedEventually(
@@ -264,7 +265,8 @@ class _FastRobustness(STLVisitor):
     ) -> npt.NDArray[np.float_]:
         child = self.visit(element.children[0])
         start, end = element.begin, element.end
-        rob, _ = np.asarray(supermaxmin(child[start:], end - start))
+        width = min(self.trace_len, end - start)
+        rob, _ = np.asarray(supermaxmin(child[start:], width))
         return rob
 
     def visitTimedUntil(self, element: TimedUntil, args) -> npt.NDArray[np.float_]:
