@@ -119,11 +119,10 @@ class ToDNF(NodeVisitor[Node]):
     """Convert a given formula to DNF"""
 
     def __init__(self, formula: Node):
-        self.formula = formula
+        # First translate to NNF
+        self.formula = to_nnf(formula)
 
     def translate(self) -> Node:
-        # First translate to NNF
-        self.formula = to_nnf(self.formula)
         return self.visit(self.formula)
 
     def visitIntConst(self, _: IntConst) -> Node:

@@ -541,7 +541,7 @@ class EQ(Node):
             raise ValueError(
                 f"Cannot canonicalize an expression of the form {repr(self)}"
             )
-        return (x >= c) & (x <= c)
+        return x == c
 
 
 class NEQ(Node):
@@ -586,7 +586,7 @@ class NEQ(Node):
             raise ValueError(
                 f"Cannot canonicalize an expression of the form {repr(self)}"
             )
-        return (x > c) | (x < c)
+        return x != c
 
 
 class Not(Node):
