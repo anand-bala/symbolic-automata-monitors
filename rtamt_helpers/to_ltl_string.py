@@ -40,6 +40,8 @@ from rtamt.node.stl.timed_since import TimedSince
 from rtamt.node.stl.timed_until import TimedUntil
 from rtamt.spec.stl.discrete_time.visitor import STLVisitor
 
+from rtamt_helpers.horizon import compute_spec_horizon
+
 NOT_IMPLEMENTED = "You should implement this."
 
 
@@ -66,14 +68,25 @@ class ToLtlString(STLVisitor):
         """Should pring a0, b0, c0, ..."""
         return self._label_prefix + "".join(reversed(next(self._label_gen)))
 
-    def convert(self, spec: STLSpecification) -> Tuple[str, Dict[str, AbstractNode]]:
+    def convert(self, spec: AbstractNode) -> Tuple[str, Dict[str, AbstractNode]]:
         formula = self.visit(spec, ())
         return formula, self.predicate_map
 
+    def visit(self, element: AbstractNode, args):
+        # HACK: If the horizon is 0, we just assume that the formula is a "region".
+        # This doesn't apply generally, but it does make the experiments easier.
+        if compute_spec_horizon(element) == 0:
+            label = self._next_label()
+            self.predicate_map[label] = element
+            return label
+
+        return super().visit(element, args)
+
     def visitPredicate(self, element: Predicate, _) -> str:
-        label = self._next_label()
-        self.predicate_map[label] = element
-        return label
+        # label = self._next_label()
+        # self.predicate_map[label] = element
+        # return label
+        raise RuntimeError("This shouldn't really happen as the horizon is 0")
 
     def visitVariable(self, element: Variable, args):
         raise NotImplementedError(NOT_IMPLEMENTED)

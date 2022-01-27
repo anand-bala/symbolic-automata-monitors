@@ -55,28 +55,28 @@ class _ComputeHorizon(STLVisitor):
         return 0
 
     def visitAbs(self, _: Abs, args):
-        return 0
+        raise NotImplementedError()
 
     def visitSqrt(self, _: Sqrt, args):
-        return 0
+        raise NotImplementedError()
 
     def visitPow(self, _: Pow, args):
-        return 0
+        raise NotImplementedError()
 
     def visitExp(self, _: Exp, args):
-        return 0
+        raise NotImplementedError()
 
     def visitAddition(self, _: Addition, args):
-        return 0
+        raise NotImplementedError()
 
     def visitSubtraction(self, _: Subtraction, args):
-        return 0
+        raise NotImplementedError()
 
     def visitMultiplication(self, _: Multiplication, args):
-        return 0
+        raise NotImplementedError()
 
     def visitDivision(self, _: Division, args):
-        return 0
+        raise NotImplementedError()
 
     def visitNot(self, node: Neg, args) -> int:
         child = node.children[0]
@@ -107,13 +107,13 @@ class _ComputeHorizon(STLVisitor):
         return np.inf
 
     def visitOnce(self, _: Once, args):
-        return 0
+        raise NotImplementedError()
 
     def visitHistorically(self, _: Historically, args):
-        return 0
+        raise NotImplementedError()
 
     def visitSince(self, _: Since, args):
-        return 0
+        raise NotImplementedError()
 
     def visitRise(self, _: Rise, args):
         raise NotImplementedError()
@@ -125,23 +125,23 @@ class _ComputeHorizon(STLVisitor):
         return 0
 
     def visitPrevious(self, _: Previous, args):
-        return 0
+        raise NotImplementedError()
 
     def visitNext(self, element: Next, args):
         child = self.visit(element.children[0])
         return 1 + child
 
     def visitTimedPrecedes(self, _: TimedPrecedes, args):
-        return 0
+        raise NotImplementedError()
 
     def visitTimedOnce(self, _: TimedOnce, args):
-        return 0
+        raise NotImplementedError()
 
     def visitTimedHistorically(self, _: TimedHistorically, args):
-        return 0
+        raise NotImplementedError()
 
     def visitTimedSince(self, _: TimedSince, args):
-        return 0
+        raise NotImplementedError()
 
     def visitTimedAlways(self, element: TimedAlways, args):
         child = self.visit(element.children[0])

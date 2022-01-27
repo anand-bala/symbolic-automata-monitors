@@ -40,7 +40,7 @@ class Interval:
         return self.low <= val <= self.high
 
     def is_empty(self) -> bool:
-        return self.low < self.high
+        return self.low > self.high
 
     def is_disjoint(self, other: "Interval") -> bool:
         return not self.overlaps(other)
