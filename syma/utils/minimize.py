@@ -167,8 +167,6 @@ class _MinimizeSFA:
                 continue
 
             phi = g_set[q]
-            case2 = Constraint(self.sa._alphabet, psi.formula & (~phi.formula))
-            case3 = Constraint(self.sa._alphabet, (~psi.formula) & phi.formula)
             # Cache the cases
             case1_f = psi.formula & phi.formula
             case1_str = str(case1_f)
@@ -181,17 +179,13 @@ class _MinimizeSFA:
             case2_f = psi.formula & (~phi.formula)
             case2_str = str(case2_f)
             if case2_str not in self.guard_cache:
-                self.guard_cache[case2_str] = Constraint(
-                    self.sa._alphabet, psi.formula & phi.formula
-                )
+                self.guard_cache[case2_str] = Constraint(self.sa._alphabet, case2_f)
             case2 = self.guard_cache[case2_str]
 
             case3_f = (~psi.formula) & phi.formula
             case3_str = str(case3_f)
             if case3_str not in self.guard_cache:
-                self.guard_cache[case3_str] = Constraint(
-                    self.sa._alphabet, psi.formula & phi.formula
-                )
+                self.guard_cache[case3_str] = Constraint(self.sa._alphabet, case3_f)
             case3 = self.guard_cache[case3_str]
 
             if splitter_found and case1.is_sat():
