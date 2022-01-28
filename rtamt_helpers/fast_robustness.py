@@ -39,6 +39,8 @@ from rtamt.node.stl.timed_precedes import TimedPrecedes
 from rtamt.node.stl.timed_since import TimedSince
 from rtamt.node.stl.timed_until import TimedUntil
 from rtamt.spec.stl.discrete_time.comp_op import StlComparisonOperator
+from rtamt.spec.stl.discrete_time.specification import \
+    STLDiscreteTimeSpecification
 from rtamt.spec.stl.discrete_time.visitor import STLVisitor
 
 NOT_IMPLEMENTED = "You should implement this."
@@ -86,7 +88,11 @@ def supermaxmin(a, w):
 
 
 class _FastRobustness(STLVisitor):
-    def __init__(self, trace: Mapping[str, Sequence[Union[int, float]]]) -> None:
+    def __init__(
+        self,
+        trace: Mapping[str, Sequence[Union[int, float]]],
+        spec: STLDiscreteTimeSpecification,
+    ) -> None:
         super().__init__()
 
         self.trace: Dict[str, npt.NDArray[np.float_]] = dict()
@@ -94,8 +100,10 @@ class _FastRobustness(STLVisitor):
             self.trace[sig] = np.asarray(trace[sig])
         self.trace_len: int = min(len(sig) for sig in trace.values())
 
-    def compute(self, spec: AbstractNode) -> float:
-        rob = self.visit(spec)
+        self.spec = spec
+
+    def compute(self) -> float:
+        rob = self.visit(self.spec.top)
         return rob[0]
 
     def visit(self, spec: AbstractNode) -> npt.NDArray[np.float_]:
@@ -115,9 +123,9 @@ class _FastRobustness(STLVisitor):
         elif op == StlComparisonOperator.GREATER:
             return lhs - rhs
         elif op == StlComparisonOperator.EQUAL:
-            return np.asarray(lhs == rhs, dtype=int)
+            return -1 * abs(lhs - rhs)
         elif op == StlComparisonOperator.NEQ:
-            return np.asarray(lhs != rhs, dtype=int)
+            return abs(lhs - rhs)
         else:
             raise ValueError(f"No idea what operation this is: {op}")
 
@@ -158,14 +166,14 @@ class _FastRobustness(STLVisitor):
         rob = np.full(self.trace_len, np.inf)
         for child in element.children:
             child_rob = self.visit(child)
-            rob = np.minimum(child_rob, rob[:len(child_rob)])
+            rob = np.minimum(child_rob, rob[: len(child_rob)])
         return rob
 
     def visitOr(self, element: Disjunction, args) -> npt.NDArray[np.float_]:
         rob = np.full(self.trace_len, -np.inf)
         for child in element.children:
             child_rob = self.visit(child)
-            rob = np.minimum(child_rob, rob[:len(child_rob)])
+            rob = np.maximum(child_rob, rob[: len(child_rob)])
         return rob
 
     def visitImplies(self, element: Implies, args) -> npt.NDArray[np.float_]:
@@ -256,7 +264,7 @@ class _FastRobustness(STLVisitor):
     def visitTimedAlways(self, element: TimedAlways, args) -> npt.NDArray[np.float_]:
         child = self.visit(element.children[0])
         start, end = element.begin, element.end
-        width = min(self.trace_len, end - start)
+        width = min(self.trace_len, end - start + 1)
         _, rob = np.asarray(supermaxmin(child[start:], width))
         return rob
 
@@ -265,7 +273,7 @@ class _FastRobustness(STLVisitor):
     ) -> npt.NDArray[np.float_]:
         child = self.visit(element.children[0])
         start, end = element.begin, element.end
-        width = min(self.trace_len, end - start)
+        width = min(self.trace_len, end - start + 1)
         rob, _ = np.asarray(supermaxmin(child[start:], width))
         return rob
 
@@ -277,6 +285,6 @@ class _FastRobustness(STLVisitor):
 
 
 def compute_robustness(
-    trace: Mapping[str, Sequence[Union[int, float]]], spec: AbstractNode
+    trace: Mapping[str, Sequence[Union[int, float]]], spec: STLDiscreteTimeSpecification
 ) -> float:
-    return _FastRobustness(trace).compute(spec)
+    return _FastRobustness(trace, spec).compute()
