@@ -1,6 +1,19 @@
 from typing import Dict, Optional, Tuple
 
-import spot
+try:
+    import spot
+except ImportError as e:
+    print(e)
+    print("")
+    print(
+        """
+The best way to install SPOT is to using conda:
+    conda install spot -c conda-forge
+If you are not using conda, see https://spot.lrde.epita.fr/install.html
+"""
+    )
+    raise e
+
 import z3
 from rtamt import STLSpecification
 from rtamt.node.abstract_node import AbstractNode
