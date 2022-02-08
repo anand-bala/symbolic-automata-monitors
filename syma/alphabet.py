@@ -132,8 +132,21 @@ class Alphabet(object):
     def __eq__(self, other: "Alphabet") -> bool:
         if set(self.vars.keys()) != set(other.vars.keys()):
             return False
-        if self.domains != other.domains:
+        if set(self.domains) != set(other.domains):
             return False
+
+        for key in self.vars.keys():
+            var1 = self.get_var(key)
+            var2 = other.get_var(key)
+            if var1.node_type != var2.node_type:
+                return False
+            if var1.name != var2.name:
+                return False
+
+            domain1 = self.get_domain(key)
+            domain2 = other.get_domain(key)
+            if domain1 != domain2:
+                return False
 
         return True
 
