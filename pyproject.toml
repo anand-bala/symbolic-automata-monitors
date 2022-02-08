@@ -1,0 +1,40 @@
+[project]
+
+name = "symbolic-automata-monitors"
+version = "0.1.0"
+description = "Symbolic Automata monitors for quantitative reasoning of signals"
+readme = "README.md"
+license = { file = "LICENSE" }
+
+authors = [
+  { name = "Anand Balakrishnan" },
+  { name = "Dejan Nickovic" },
+]
+
+classifiers = [
+  "License :: OSI Approved :: BSD License",
+  "Programming Language :: Python :: 3 :: Only",
+  "Intended Audience :: Science/Research",
+]
+
+requires-python = "~= 3.9"
+
+depencencies = [
+  "numpy ~= 1.21",
+  "scipy ~= 1.7",
+  "z3-solver ~= 4.8",
+  "networkx ~= 2.6",
+]
+
+[project.optional-dependencies]
+autgen = [
+  "rtamt @ https://github.com/nickovic/rtamt/tarball/a16db77b61028f774d81457ff22e666229a5432c",
+]
+
+[project.urls]
+
+repository = "https://github.com/anand-bala/symbolic-automata-monitors"
+
+[build-system]
+requires = ["setuptools >= 60", "wheel"]
+build-backend = "setuptools.build_meta"
