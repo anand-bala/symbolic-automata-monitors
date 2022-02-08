@@ -17,7 +17,6 @@ class Location(object):
     id: int
     initial: bool = False
     accepting: bool = False
-    rejecting: bool = False
 
 
 @dataclass
@@ -46,7 +45,8 @@ class SymbolicAutomaton(object):
         self._initial_location: Optional[int] = None
         self.logger = logging.getLogger(__name__)
 
-        self._is_complete = False
+        self._is_complete: Optional[bool] = None
+        self._is_deterministic: Optional[bool] = None
 
     def add_var(self, name: VarNode, domain: Optional[Union[Interval, Tuple]] = None):
         if domain is not None and isinstance(domain, tuple):
@@ -102,7 +102,8 @@ class SymbolicAutomaton(object):
             guard = guard.minimize()
         self._graph.add_edge(src, dst, guard=guard)
 
-        self._is_complete = False
+        self._is_complete = None
+        self._is_deterministic = None
 
     def location(self, node: int) -> Location:
         data = self._graph.nodes[node]
@@ -164,6 +165,7 @@ class SymbolicAutomaton(object):
 
     def _check_complete(self) -> bool:
         """Checks if the automaton is complete without early exit.
+        Used for debugging purposes only.
 
         Here, we essentially check if the disjunction of all outgoing transition guards
         from each state evaluates to `True`.
@@ -184,7 +186,7 @@ class SymbolicAutomaton(object):
         Here, we essentially check if the disjunction of all outgoing transition guards
         from each state evaluates to `True`.
         """
-        if self._is_complete:
+        if self._is_complete is not None:
             return self._is_complete
         for q in self.locations:
             if not self._is_state_complete(q):
@@ -193,6 +195,29 @@ class SymbolicAutomaton(object):
 
         self._is_complete = True
         return self._is_complete
+
+    def _is_state_deterministic(self, q: int) -> bool:
+        """Check if the given state has only deterministic transitions"""
+        for p1 in self._graph.successors(q):
+            for p2 in self._graph.successors(q):
+                psi1 = self.get_guard(q, p1).formula
+                psi2 = self.get_guard(q, p2).formula
+                conjunction = Constraint(self._alphabet, psi1 & psi2)
+                if p1 != p2 and conjunction.is_sat():
+                    return False
+        return True
+
+    def is_deterministic(self) -> bool:
+        """Check if the automaton is deterministic"""
+
+        if self._is_deterministic is not None:
+            return self._is_deterministic
+        for q in self.locations:
+            if not self._is_state_deterministic(q):
+                self._is_deterministic = False
+                return self._is_deterministic
+        self._is_deterministic = True
+        return self._is_deterministic
 
     def is_accepting(self, loc: int) -> bool:
         info = self.location(loc)
