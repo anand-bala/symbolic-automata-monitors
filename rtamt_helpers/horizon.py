@@ -2,8 +2,6 @@
 Compute the horizon for a STL specificaiton
 """
 import numpy as np
-
-
 from rtamt.node.abstract_node import AbstractNode
 from rtamt.node.arithmetic.abs import Abs
 from rtamt.node.arithmetic.addition import Addition

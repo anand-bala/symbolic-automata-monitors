@@ -9,6 +9,7 @@ from syma.constraint.node import BoolConst, Node, NodeType, Or
 if TYPE_CHECKING:
     from syma.alphabet import Alphabet
 
+
 def _reduce_or(alphabet: "Alphabet", formula: Node) -> Node:
     if formula.node_type != NodeType.Or:
         return formula
@@ -45,6 +46,7 @@ def _reduce_or(alphabet: "Alphabet", formula: Node) -> Node:
     for p in predicates:
         expr |= p
     return expr
+
 
 def _reduce(alphabet: "Alphabet", formula: Node) -> Node:
     if formula.node_type != NodeType.And:

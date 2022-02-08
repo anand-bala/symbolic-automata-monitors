@@ -38,3 +38,11 @@ repository = "https://github.com/anand-bala/symbolic-automata-monitors"
 [build-system]
 requires = ["setuptools >= 60", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.isort]
+profile = "black"
+group_by_package = true
+
+[tool.black]
+line-length = 88
+

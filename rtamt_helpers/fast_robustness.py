@@ -39,8 +39,7 @@ from rtamt.node.stl.timed_precedes import TimedPrecedes
 from rtamt.node.stl.timed_since import TimedSince
 from rtamt.node.stl.timed_until import TimedUntil
 from rtamt.spec.stl.discrete_time.comp_op import StlComparisonOperator
-from rtamt.spec.stl.discrete_time.specification import \
-    STLDiscreteTimeSpecification
+from rtamt.spec.stl.discrete_time.specification import STLDiscreteTimeSpecification
 from rtamt.spec.stl.discrete_time.visitor import STLVisitor
 
 NOT_IMPLEMENTED = "You should implement this."
