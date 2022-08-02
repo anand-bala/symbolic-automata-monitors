@@ -1,19 +1,5 @@
 from typing import Dict, Optional, Tuple
 
-try:
-    import spot
-except ImportError as e:
-    print(e)
-    print("")
-    print(
-        """
-The best way to install SPOT is to using conda:
-    conda install spot -c conda-forge
-If you are not using conda, see https://spot.lrde.epita.fr/install.html
-"""
-    )
-    raise e
-
 import z3
 from rtamt import STLSpecification
 from rtamt.node.abstract_node import AbstractNode
@@ -27,6 +13,20 @@ from syma.utils.minimize import minimize_sfa
 from .to_constraint import from_node_to_constraint as to_constraint
 from .to_ltl_string import to_ltl_string
 from .to_z3_expr import from_node_to_z3
+
+try:
+    import spot
+except ImportError as e:
+    print(e)
+    print("")
+    print(
+        """
+The best way to install SPOT is to using conda:
+    conda install spot -c conda-forge
+If you are not using conda, see https://spot.lrde.epita.fr/install.html
+"""
+    )
+    raise e
 
 
 def get_stl_formula(formula: str, *vars: Tuple[str, str]) -> STLSpecification:

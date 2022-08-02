@@ -18,7 +18,7 @@ classifiers = [
 
 requires-python = "~= 3.9"
 
-depencencies = [
+dependencies = [
   "numpy ~= 1.21",
   "scipy ~= 1.7",
   "z3-solver ~= 4.8",
@@ -33,7 +33,7 @@ repository = "https://github.com/anand-bala/symbolic-automata-monitors"
 where = ["src"]
 
 [build-system]
-requires = ["setuptools >= 61", "setuptools-scm", "wheel"]
+requires = ["setuptools >= 61.0", "setuptools-scm", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.isort]
