@@ -50,18 +50,15 @@ class Evaluate(NodeVisitor[Union[bool, int, float]]):
         return node.value
 
     def visitBoolVar(self, node: BoolVar) -> bool:
-        val = self.value[node.name]
-        assert isinstance(val, bool), "Bool variable doesn't have bool value"
+        val = bool(self.value[node.name])
         return val
 
     def visitIntVar(self, node: IntVar) -> int:
-        val = self.value[node.name]
-        assert isinstance(val, int), "Int variable doesn't have int value"
+        val = int(self.value[node.name])
         return val
 
     def visitRealVar(self, node: RealVar) -> float:
-        val = self.value[node.name]
-        assert isinstance(val, float), "Real variable doesn't have float value"
+        val = float(self.value[node.name])
         return val
 
     def visitEQ(self, node: EQ) -> bool:
