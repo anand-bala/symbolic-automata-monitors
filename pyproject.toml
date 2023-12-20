@@ -1,9 +1,13 @@
 [project]
 name = "symbolic-automata-monitors"
-version = "0.1.0"
+version = "0.2.0"
 description = "Symbolic Automata monitors for quantitative reasoning of signals"
 readme = "README.md"
 license = { file = "LICENSE" }
+
+maintainers = [
+  { name = "Anand Balakrishnan" },
+]
 
 authors = [
   { name = "Anand Balakrishnan" },
@@ -29,7 +33,7 @@ dependencies = [
 [project.urls]
 repository = "https://github.com/anand-bala/symbolic-automata-monitors"
 
-[tools.setuptools.packages.find]
+[tool.setuptools.packages.find]
 where = ["src"]
 
 [build-system]
