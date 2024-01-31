@@ -64,6 +64,12 @@ and [`Constraint`][doc-constraint].
 [doc-symaut]: https://anand-bala.github.io/symbolic-automata-monitors/docs/syma.html#SymbolicAutomaton
 [doc-constraint]: https://anand-bala.github.io/symbolic-automata-monitors/docs/syma.html#Constraint
 
+To generate the above code from STL specications, run:
+
+```shell
+$ python3 ./bin/generate_symaut.py 'eventually[0,10] (x > 0)'
+```
+
 ## References
 
 - S. Jakšić, E. Bartocci, R. Grosu, and D. Ničković, “An Algebraic Framework for Runtime
