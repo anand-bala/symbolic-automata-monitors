@@ -5,14 +5,9 @@ description = "Symbolic Automata monitors for quantitative reasoning of signals"
 readme = "README.md"
 license = { file = "LICENSE" }
 
-maintainers = [
-  { name = "Anand Balakrishnan" },
-]
+maintainers = [{ name = "Anand Balakrishnan" }]
 
-authors = [
-  { name = "Anand Balakrishnan" },
-  { name = "Dejan Nickovic" },
-]
+authors = [{ name = "Anand Balakrishnan" }, { name = "Dejan Nickovic" }]
 
 classifiers = [
   "License :: OSI Approved :: BSD License",
@@ -47,3 +42,6 @@ group_by_package = true
 [tool.black]
 line-length = 88
 
+[[tool.mypy.overrides]]
+module = ["rtamt", "rtamt.*"]
+ignore_missing_imports = true

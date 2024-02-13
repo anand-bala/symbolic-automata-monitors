@@ -43,7 +43,7 @@ class _ToStlString(STLVisitor):
     def visit(self, spec: AbstractNode) -> str:
         return super().visit(spec, ())
 
-    def visitPredicate(self, element: Predicate, _) -> str:
+    def visitPredicate(self, element: Predicate, args) -> str:
         lhs, rhs = self.visit(element.children[0]), self.visit(element.children[1])
         op = StlComparisonOperator(element.operator)
 

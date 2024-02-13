@@ -1,4 +1,4 @@
-name: sym-rl
+name: symbolic-automata-monitors
 channels:
   - conda-forge
 dependencies:

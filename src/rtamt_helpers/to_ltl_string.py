@@ -1,5 +1,3 @@
-import itertools
-import string
 from typing import Dict, Tuple
 
 from rtamt import STLSpecification
@@ -41,52 +39,33 @@ from rtamt.node.stl.timed_until import TimedUntil
 from rtamt.spec.stl.discrete_time.visitor import STLVisitor
 
 from rtamt_helpers.horizon import compute_spec_horizon
+from rtamt_helpers.to_stl_string import _ToStlString
 
 NOT_IMPLEMENTED = "You should implement this."
 
 
 class ToLtlString(STLVisitor):
-    """Convert an STL formula to a an LTL formula.
+    """Convert an STL formula to a an LTL formula consumable by Spot.
 
     1. Any predicate (symbolic) is assigned a label and stored in a map.
     2. Any Bounded Temporal Operator is converted to a sequence of nexted Next
        operations.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-
         self.predicate_map = dict()  # type: Dict[str, AbstractNode]
-
-        self._label_prefix = "pred_"
-        self._label_gen = itertools.product(
-            string.digits,
-            string.ascii_lowercase,
-        )
-
-    def _next_label(self) -> str:
-        """Should pring a0, b0, c0, ..."""
-        return self._label_prefix + "".join(reversed(next(self._label_gen)))
 
     def convert(self, spec: AbstractNode) -> Tuple[str, Dict[str, AbstractNode]]:
         formula = self.visit(spec, ())
         return formula, self.predicate_map
 
-    def visit(self, element: AbstractNode, args):
-        # HACK: If the horizon is 0, we just assume that the formula is a "region".
-        # This doesn't apply generally, but it does make the experiments easier.
-        if compute_spec_horizon(element) == 0:
-            label = self._next_label()
-            self.predicate_map[label] = element
-            return label
-
-        return super().visit(element, args)
-
-    def visitPredicate(self, element: Predicate, _) -> str:
-        # label = self._next_label()
-        # self.predicate_map[label] = element
-        # return label
-        raise RuntimeError("This shouldn't really happen as the horizon is 0")
+    def visitPredicate(self, element: Predicate, args) -> str:
+        predicate_str = _ToStlString().visitPredicate(element, args)
+        # We need to add double quotes around  the expression
+        spot_consumable_predicate_str = f'"{predicate_str}"'
+        self.predicate_map[spot_consumable_predicate_str] = element
+        return spot_consumable_predicate_str
 
     def visitVariable(self, element: Variable, args):
         raise NotImplementedError(NOT_IMPLEMENTED)
@@ -197,28 +176,14 @@ class ToLtlString(STLVisitor):
         child = self.visit(element.children[0], args)
         length = element.end - element.begin
         assert isinstance(length, int)
-
-        formula = str(child)  # len = 0
-        for _ in range(length):  # len = 1..length
-            formula = f"{child} & X ({formula})"
-
-        for _ in range(element.begin):  # if begin > 0
-            formula = f"X({formula})"
-
+        formula = f"G[{element.begin}:{element.end}] ({child})"
         return formula
 
     def visitTimedEventually(self, element, args):
         child = self.visit(element.children[0], args)
         length = element.end - element.begin
         assert isinstance(length, int)
-
-        formula = str(child)  # len = 0
-        for _ in range(length):  # len = 1..length
-            formula = f"({child} | X {formula})"
-
-        for _ in range(element.begin):  # if begin > 0
-            formula = f"X({formula})"
-
+        formula = f"F[{element.begin}:{element.end}] ({child})"
         return formula
 
     def visitTimedUntil(self, element: TimedUntil, args):

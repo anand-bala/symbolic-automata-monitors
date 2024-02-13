@@ -151,12 +151,14 @@ def print_automaton_gen_code(spec: STLSpecification, *, use_ltlf=False):
 
     print(f"# STL Formula is: {spec.spec}")
     print(f"# LTL Formula is:\n#\t{ltl_formula}")
+    print("from syma.automaton import SymbolicAutomaton")
+
     #
     # Convert the rtamt predicates to syma Constraints
-    constraint_map = {
-        label: to_constraint(pred, spec.var_type_dict)
-        for label, pred in predicate_map.items()
-    }
+    # constraint_map = {
+    #     label: to_constraint(pred, spec.var_type_dict)
+    #     for label, pred in predicate_map.items()
+    # }
 
     # Convert the LTL formula to an automaton
     aut = to_omega_automaton(ltl_formula, use_ltlf=use_ltlf)
@@ -173,12 +175,14 @@ def print_automaton_gen_code(spec: STLSpecification, *, use_ltlf=False):
     print("# TODO: Change the domain as required!")
     for var_name, var_type in spec.var_type_dict.items():
         type_fn = "real" if var_type == "float" else var_type
-        print(f'{var_name} = aut.declare_{type_fn}("{var_name}", "{var_type}")')
+        print(f'{var_name} = aut.declare_{type_fn}("{var_name}")')
 
-    print("")
-    print("# Predicate labels")
-    for label, expr in constraint_map.items():
-        print(f"{label} = {str(expr)}")
+    # print("")
+    # print("# Predicate labels in a dictionary")
+    # print("PREDS = {")
+    # for label, expr in constraint_map.items():
+    #     print(f"{label} : {str(expr)}")
+    # print("}")
 
     bdict = aut.get_dict()  # type: ignore
 
@@ -200,6 +204,7 @@ def print_automaton_gen_code(spec: STLSpecification, *, use_ltlf=False):
                 guard_str = "True"
             else:
                 guard_str = guard_str.replace("!", "~")
+                guard_str = guard_str.replace('"', "")
             print(f"aut.add_transition({tr.src}, {tr.dst}, guard=({guard_str}))")
 
 
@@ -207,6 +212,8 @@ def generate_minimal_symaut_code(aut: SymbolicAutomaton):
     aut = minimize_sfa(aut)
 
     assert aut.is_complete()
+    print("from syma.automaton import SymbolicAutomaton")
+    print("")
 
     print("aut = SymbolicAutomaton()")
     print("")

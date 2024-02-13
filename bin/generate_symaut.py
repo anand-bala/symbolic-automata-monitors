@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-from typing import Dict, NamedTuple, Optional, Tuple
+from typing import Dict, List, NamedTuple, Optional, Tuple
 
 try:
     import spot
@@ -21,12 +21,13 @@ If you are not using conda, see https://spot.lrde.epita.fr/install.html
 import rtamt
 from rtamt.node.abstract_node import AbstractNode
 
-from rtamt_helpers.to_automaton import print_automaton_gen_code
+from rtamt_helpers.to_automaton import get_stl_formula, print_automaton_gen_code
 from rtamt_helpers.to_ltl_string import to_ltl_string
 
 
 class Arguments(NamedTuple):
     formula: str
+    vars: List[Tuple[str, str]]
     output_file: Optional[Path]
     use_ltlf: bool
 
@@ -53,36 +54,22 @@ def parse_args() -> Arguments:
 
     parser.add_argument("formula", help="Temporal Logic formula to parse", type=str)
 
+    parser.add_argument("--var", nargs=2, action="append", type=str)
+
     args = parser.parse_args()
+    vars = args.var if args.var is not None else []
 
     return Arguments(
-        formula=args.formula, output_file=args.output_file, use_ltlf=args.use_ltlf
+        formula=args.formula,
+        output_file=args.output_file,
+        use_ltlf=args.use_ltlf,
+        vars=vars,
     )
-
-
-def get_stl_formula(formula: str) -> rtamt.STLSpecification:
-    spec = rtamt.STLSpecification()
-
-    # TODO: The vars are hard coded for our experiments
-    spec.declare_var("x", "int")
-    spec.declare_var("y", "int")
-
-    spec.spec = formula
-
-    spec.parse()
-
-    return spec
-
-
-def get_ltl_formula(
-    spec: rtamt.STLSpecification,
-) -> Tuple[str, Dict[str, AbstractNode]]:
-    return to_ltl_string(spec)
 
 
 def main():
     args = parse_args()
-    stl_spec = get_stl_formula(args.formula)
+    stl_spec = get_stl_formula(args.formula, *args.vars)
     print_automaton_gen_code(stl_spec, use_ltlf=args.use_ltlf)
 
 
