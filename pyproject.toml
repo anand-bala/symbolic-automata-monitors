@@ -45,3 +45,7 @@ line-length = 88
 [[tool.mypy.overrides]]
 module = ["rtamt", "rtamt.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["spot", "z3"]
+ignore_missing_imports = true

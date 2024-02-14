@@ -1,6 +1,9 @@
 import argparse
+import ast
 from pathlib import Path
 from typing import Dict, List, NamedTuple, Optional, Tuple
+
+from syma.utils.minimize import minimize_sfa
 
 try:
     import spot
@@ -21,7 +24,12 @@ If you are not using conda, see https://spot.lrde.epita.fr/install.html
 import rtamt
 from rtamt.node.abstract_node import AbstractNode
 
-from rtamt_helpers.to_automaton import get_stl_formula, print_automaton_gen_code
+from rtamt_helpers.to_automaton import (
+    generate_minimal_symaut_code,
+    get_stl_formula,
+    get_symbolic_automaton,
+    print_automaton_gen_code,
+)
 from rtamt_helpers.to_ltl_string import to_ltl_string
 
 
@@ -70,7 +78,10 @@ def parse_args() -> Arguments:
 def main():
     args = parse_args()
     stl_spec = get_stl_formula(args.formula, *args.vars)
-    print_automaton_gen_code(stl_spec, use_ltlf=args.use_ltlf)
+    aut = get_symbolic_automaton(stl_spec, use_ltlf=args.use_ltlf)
+    code = generate_minimal_symaut_code(aut, aut_name="aut")
+    print(ast.unparse(code))
+    # print_automaton_gen_code(stl_spec, use_ltlf=args.use_ltlf)
 
 
 if __name__ == "__main__":
