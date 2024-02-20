@@ -1,5 +1,5 @@
 import ast
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Union
 
 import z3
 from rtamt import STLSpecification
@@ -11,7 +11,6 @@ from syma.constraint.constraint import Constraint
 from syma.constraint.node.node import BoolVar, IntVar, Node, RealVar
 from syma.utils.minimize import minimize_sfa
 
-from .to_ltl_string import to_ltl_string
 from .to_z3_expr import from_node_to_z3
 
 try:
@@ -76,12 +75,16 @@ def get_z3_predicates(
 
 
 def get_symbolic_automaton(
-    spec: STLSpecification,
+    ltl_formula: str,
     *,
     use_ltlf=False,
-    alphabet: Optional[Alphabet] = None,
+    alphabet: Optional[Union[Alphabet, Dict[str, str]]] = None,
 ) -> SymbolicAutomaton:
-    ltl_formula, _ = to_ltl_string(spec)
+    """
+    :param ltl_formula: A LTL string formula consumable by spot
+    :param use_ltlf: Use the LTLf feature from spot (usually set to `False`)
+    :param alphabet: An optional domain for the variables.
+    """
     #
     # Convert the rtamt predicates to syma Constraints
     # constraint_map = {
@@ -101,18 +104,27 @@ def get_symbolic_automaton(
     # after the code is printed
     sym_aut = SymbolicAutomaton()
     if alphabet is not None:
-        sym_aut._alphabet = alphabet
+        if isinstance(alphabet, Alphabet):
+            sym_aut._alphabet = alphabet
+        elif isinstance(alphabet, dict):
+            for var_name, var_type in alphabet.items():
+                if var_type == "float":
+                    sym_aut.declare_real(var_name)
+                elif var_type == "int":
+                    sym_aut.declare_int(var_name)
+                else:  # assume bool
+                    sym_aut.declare_bool(var_name)
+                # else:
+                #     raise RuntimeError(f"Unsupported variable type: {(var_name, var_type)}")
+        else:
+            raise TypeError(f"Unsupported alphabet type: {type(alphabet)}")
     else:
-        alphabet = sym_aut._alphabet
-        for var_name, var_type in spec.var_type_dict.items():
-            if var_type == "float":
-                sym_aut.declare_real(var_name)
-            elif var_type == "int":
-                sym_aut.declare_int(var_name)
-            elif var_type == "bool":
-                sym_aut.declare_bool(var_name)
-            else:
-                raise RuntimeError(f"Unsupported variable type: {(var_name, var_type)}")
+        # Assume all are bool
+        aps = omega_aut.ap()  # type: ignore
+        for ap in aps:
+            sym_aut.declare_bool(str(ap))
+
+    alphabet = sym_aut._alphabet
 
     # Add the locations in the omega automaton into the symbolic automaton
     init_state: int = omega_aut.get_init_state_number()  # type: ignore

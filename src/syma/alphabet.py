@@ -125,7 +125,7 @@ class Alphabet(object):
     In this class, we maintain a list of variables and domain mappings.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.vars: dict[str, VarNode] = dict()  # Map of variable names to variable node
         self.domains: dict[str, Interval] = dict()  # Domain Map
 

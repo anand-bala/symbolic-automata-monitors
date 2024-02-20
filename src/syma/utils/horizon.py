@@ -28,7 +28,7 @@ def compute_horizon(sa: SymbolicAutomaton) -> float:
     # the edge weight to -1
     graph = nx.DiGraph()
     graph.add_nodes_from(sa._graph)
-    for (u, v) in sa._graph.edges:
+    for u, v in sa._graph.edges:
         # Prevent self loops in the sinks
         if u in sinks:
             continue

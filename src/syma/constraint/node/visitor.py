@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Generic, TypeVar
 
 from .node import (
     EQ,
@@ -21,7 +22,6 @@ from .node import (
 
 NOT_IMPLEMENTED = "You should implement this."
 
-from typing import Generic, TypeVar
 
 T = TypeVar("T")
 

@@ -1,4 +1,3 @@
-from functools import reduce
 from typing import Mapping, Union
 
 from syma.constraint.node import (

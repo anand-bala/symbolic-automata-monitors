@@ -1,8 +1,6 @@
 """Convert predicates to Z3 formula"""
 
-import itertools
-import string
-from typing import Dict, Tuple, Union
+from typing import Dict, Union
 
 import z3
 from rtamt import STLSpecification
@@ -25,7 +23,6 @@ from rtamt.node.ltl.historically import Historically
 from rtamt.node.ltl.iff import Iff
 from rtamt.node.ltl.implies import Implies
 from rtamt.node.ltl.neg import Neg
-from rtamt.node.ltl.next import Next
 from rtamt.node.ltl.once import Once
 from rtamt.node.ltl.predicate import Predicate
 from rtamt.node.ltl.previous import Previous
@@ -35,11 +32,6 @@ from rtamt.node.ltl.until import Until
 from rtamt.node.ltl.variable import Variable
 from rtamt.node.ltl.xor import Xor
 from rtamt.node.stl.timed_always import TimedAlways
-from rtamt.node.stl.timed_eventually import TimedEventually
-from rtamt.node.stl.timed_historically import TimedHistorically
-from rtamt.node.stl.timed_once import TimedOnce
-from rtamt.node.stl.timed_precedes import TimedPrecedes
-from rtamt.node.stl.timed_since import TimedSince
 from rtamt.node.stl.timed_until import TimedUntil
 from rtamt.spec.stl.discrete_time.comp_op import StlComparisonOperator
 from rtamt.spec.stl.discrete_time.visitor import STLVisitor

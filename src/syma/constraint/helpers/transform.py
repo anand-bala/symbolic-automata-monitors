@@ -195,7 +195,6 @@ class ToDNF(NodeVisitor[Node]):
         return reduce(lambda x, y: x | y, distributed_ops)
 
     def visitAnd(self, node: And) -> Node:
-
         # We need to distribute the AND over the ORs.
         # First, apply the transform to the children.
         children = [self.visit(child) for child in node.children]
@@ -289,7 +288,6 @@ class ToCNF(NodeVisitor[Node]):
         return reduce(lambda x, y: x & y, distributed_ops)
 
     def visitOr(self, node: Or) -> Node:
-
         # We need to distribute the ORs over the ANDs.
         # First, apply the transform to the children.
         children = [self.visit(child) for child in node.children]
